@@ -1,0 +1,40 @@
+{
+  "name": "dink-club",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "start": "node scripts/expo-local.mjs start --lan",
+    "web": "node scripts/expo-local.mjs start --web --localhost",
+    "android": "node scripts/expo-local.mjs run:android",
+    "ios": "node scripts/expo-local.mjs run:ios",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "export": "node scripts/expo-local.mjs export --platform all"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "57.0.26",
+    "expo-asset": "~57.0.18",
+    "expo-audio": "~57.0.5",
+    "expo-file-system": "~57.0.7",
+    "expo-haptics": "~57.0.3",
+    "expo-iap": "5.8.3",
+    "expo-image-picker": "~57.0.20",
+    "expo-keep-awake": "~57.0.2",
+    "expo-sensors": "~57.0.3",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-audio-api": "0.13.6",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-svg": "15.15.4",
+    "react-native-web": "~0.21.0",
+    "react-native-worklets": "0.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~5.9.3"
+  }
+}

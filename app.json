@@ -1,0 +1,76 @@
+{
+	"expo": {
+		"name": "Dink Club",
+		"slug": "dink-club",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"userInterfaceStyle": "light",
+		"icon": "./assets/icon.png",
+		"splash": {
+			"image": "./assets/splash.png",
+			"resizeMode": "contain",
+			"backgroundColor": "#f5f3e9"
+		},
+		"ios": {
+			"supportsTablet": true,
+			"bundleIdentifier": "com.dinkclub.app",
+			"infoPlist": {
+				"ITSAppUsesNonExemptEncryption": false,
+				"NSLocalNetworkUsageDescription": "Dink Club looks for a friend’s phone nearby so you can rally. Nothing leaves your local network.",
+				"NSBonjourServices": [
+					"_dinkrally._tcp"
+				]
+			}
+		},
+		"android": {
+			"package": "com.dinkclub.app",
+			"adaptiveIcon": {
+				"foregroundImage": "./assets/adaptive-icon.png",
+				"backgroundColor": "#174e38"
+			},
+			"blockedPermissions": [
+				"android.permission.RECORD_AUDIO"
+			]
+		},
+		"web": {
+			"bundler": "metro",
+			"favicon": "./assets/icon.png"
+		},
+		"plugins": [
+			[
+				"expo-sensors",
+				{
+					"motionPermission": "Dink Club uses your phone’s motion to turn your swings into pickleball sounds. Motion stays on your device."
+				}
+			],
+			[
+				"expo-audio",
+				{
+					"microphonePermission": false,
+					"recordAudioAndroid": false,
+					"enableBackgroundPlayback": false,
+					"enableBackgroundRecording": false
+				}
+			],
+			[
+				"react-native-audio-api",
+				{
+					"iosBackgroundMode": false,
+					"androidForegroundService": false,
+					"androidPermissions": [],
+					"disableFFmpeg": true
+				}
+			],
+			[
+				"expo-image-picker",
+				{
+					"photosPermission": "Dink Club puts a photo you choose on your paddle face. It stays on this phone.",
+					"cameraPermission": false,
+					"microphonePermission": false
+				}
+			],
+			"expo-iap",
+			"./plugins/with-scene-lifecycle.cjs"
+		]
+	}
+}
