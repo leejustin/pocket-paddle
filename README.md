@@ -1,4 +1,4 @@
-# Dink Club
+# Pocket Pickle
 
 A silly little gimmick app, like the old lightsaber apps but for pickleball. Your phone is the paddle: the screen is the paddle face, and the handle runs off the bottom edge into your hand. Swing it, and the paddle goes *pop*. Swing harder for a louder, crisper pop. Wobble through a swing and you'll catch the edge with a *clack*. The ball smacks the face, the face flashes and kicks, and the phone buzzes. That's it.
 
@@ -20,9 +20,9 @@ Off unless someone turns it on: ••• → **Find a friend nearby** on both p
 
 The phones talk directly: same Wi-Fi on both platforms, or no Wi-Fi at all between two iPhones (Apple's peer-to-peer Wi-Fi). Nothing goes through a server. Rally mode needs a native build; it's hidden in Expo Go and the browser.
 
-### Dink Club Pro
+### Pocket Pickle Pro
 
-A one-time in-app purchase (`com.dinkclub.app.pro`, a non-consumable) unlocks the Wood, Carbon, and Thock sounds, the Gold, Carbon, Ice, and Sunset faces, and your own photo on the paddle. Locked sounds still play a preview. Purchases go through the App Store or Google Play on the phone (expo-iap); there's no server. Development builds have a "unlock without paying" switch on the Pro page for testing.
+A one-time in-app purchase (`com.leejustin.pocketpickle.pro`, a non-consumable) unlocks the Wood, Carbon, and Thock sounds, the Gold, Carbon, Ice, and Sunset faces, and your own photo on the paddle. Locked sounds still play a preview. Purchases go through the App Store or Google Play on the phone (expo-iap); there's no server. Development builds have a "unlock without paying" switch on the Pro page for testing.
 
 Desktop preview (browsers need a tap on **Grab the paddle** first; there's no motion sensor, so the keyboard stands in: Space pops, Shift+Space hits hard, E catches the edge):
 
@@ -33,7 +33,7 @@ After copying this directory elsewhere, run `npm ci` to restore its locked depen
 ## How it works
 
 - **Sounds** are synthesized by `scripts/generate_sounds.py`, tuned to measurements of real pickleball contacts: a ~1.1 kHz "pock," a bright click, and a ~15 ms decay. There are soft, medium, and hard pops (three variants each, never the same twice in a row), two edge clacks, three Pro paddle packs, and the court bounce and dead ball used in rallies. See [sound-source/README.md](sound-source/README.md).
-- **Rally** rules live in `src/rally.ts` (pure, tested). Each ball is judged only by the phone it's flying toward, so the phones never disagree about a point; they measure network delay and take it off the ball's flight. The connection is a small local Expo module, `modules/dink-link` (Network.framework on iOS, Network Service Discovery and sockets on Android).
+- **Rally** rules live in `src/rally.ts` (pure, tested). Each ball is judged only by the phone it's flying toward, so the phones never disagree about a point; they measure network delay and take it off the ball's flight. The connection is a small local Expo module, `modules/pickle-link` (Network.framework on iOS, Network Service Discovery and sockets on Android).
 - **Swings** are detected mostly from the gyro (`src/motion.ts`), so a wrist flick counts. The pop fires right at peak swing speed, the moment a real paddle would meet the ball. Handling, slow turns, glitchy frames, and follow-through don't pop.
 - **Audio:** one mixer (`src/mixer.ts`) plays everything. In a local development build it uses `react-native-audio-api` for the lowest delay; Expo Go falls back to expo-audio automatically; the browser uses Web Audio.
 - With the system Reduce Motion setting on, the face doesn't shake or flash.
@@ -63,6 +63,6 @@ In the iOS Simulator (no motion sensor), development builds swing when you tap t
 
 Before publishing:
 
-- Pick your own bundle ID and Android package in app.json (com.dinkclub.app is a placeholder) and change `PRO_SKU` in `src/usePro.ts` to match.
+- The bundle ID and Android package are `com.leejustin.pocketpickle` (app.json). If you change them, change `PRO_SKU` in `src/usePro.ts` to match.
 - Create the Pro product as a non-consumable in App Store Connect and Google Play Console with that ID and your price.
 - Test purchases with a sandbox account (or a StoreKit configuration file in Xcode) and rallies on real phones.

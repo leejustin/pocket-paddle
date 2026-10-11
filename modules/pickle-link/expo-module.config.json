@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["PickleLinkModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.picklelink.PickleLinkModule"]
+  }
+}

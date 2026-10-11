@@ -96,7 +96,7 @@ export function Menu(props: MenuProps) {
 				</>}
 
 				{!pro.owned && <Pressable onPress={() => setPage('pro')} accessibilityRole="button" style={styles.proCard}>
-					<Text style={styles.proTitle}>Dink Club Pro{pro.price ? ` · ${pro.price}` : ''}</Text>
+					<Text style={styles.proTitle}>Pocket Pickle Pro{pro.price ? ` · ${pro.price}` : ''}</Text>
 					<Text style={styles.proCopy}>Wood, Carbon and Thock sounds, four more faces, and your own photo on the paddle.</Text>
 				</Pressable>}
 
@@ -110,8 +110,8 @@ export function Menu(props: MenuProps) {
 
 function ProPage({ pro, finish, onBack }: { pro: Pro; finish: Finish; onBack: () => void }) {
 	return <>
-		<Text accessibilityRole="header" style={styles.title}>Dink Club Pro</Text>
-		{pro.owned ? <Text style={styles.body}>Pro is unlocked on this phone. Thanks for supporting Dink Club!</Text> : <>
+		<Text accessibilityRole="header" style={styles.title}>Pocket Pickle Pro</Text>
+		{pro.owned ? <Text style={styles.body}>Pro is unlocked on this phone. Thanks for supporting Pocket Pickle!</Text> : <>
 			<Text style={styles.bullet}>• Three more paddle sounds: Wood, Carbon and Thock</Text>
 			<Text style={styles.bullet}>• Four more faces: Gold, Carbon, Ice and Sunset</Text>
 			<Text style={styles.bullet}>• Your own photo on the paddle face</Text>
@@ -121,7 +121,7 @@ function ProPage({ pro, finish, onBack }: { pro: Pro; finish: Finish; onBack: ()
 					style={[styles.done, { backgroundColor: finish.face, opacity: pro.busy ? 0.6 : 1 }]}>
 					<Text style={[styles.doneText, { color: finish.print }]}>{pro.busy ? 'Talking to the store…' : pro.price ? `Unlock for ${pro.price}` : 'Unlock Pro'}</Text>
 				</Pressable>
-				: <Text style={styles.hint}>Pro is sold in the App Store and Google Play versions of Dink Club.</Text>}
+				: <Text style={styles.hint}>Pro is sold in the App Store and Google Play versions of Pocket Pickle.</Text>}
 			{pro.available && <Pressable onPress={pro.restore} disabled={pro.busy} accessibilityRole="button" style={styles.link}>
 				<Text style={styles.linkText}>Restore purchase</Text>
 			</Pressable>}

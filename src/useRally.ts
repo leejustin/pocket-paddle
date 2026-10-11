@@ -68,7 +68,7 @@ export function useRally(cue: (name: Cue) => void) {
 			link.addListener('onWaiting', ({ denied }) => {
 				setView(current => current.kind === 'lobby' ? {
 					...current,
-					problem: denied ? 'Turn on Local Network for Dink Club in Settings to find nearby phones.' : 'Waiting for Wi-Fi…',
+					problem: denied ? 'Turn on Local Network for Pocket Pickle in Settings to find nearby phones.' : 'Waiting for Wi-Fi…',
 				} : current);
 			}),
 			link.addListener('onConnected', ({ initiator }) => {
@@ -84,7 +84,7 @@ export function useRally(cue: (name: Cue) => void) {
 				const message = parseMessage(text);
 				if (!message || !rally.current) return;
 				if (message.t === 'hello') {
-					if (message.v !== PROTOCOL) return end('Update Dink Club on both phones to rally.');
+					if (message.v !== PROTOCOL) return end('Update Pocket Pickle on both phones to rally.');
 					friend.current = message.name;
 					return show();
 				}

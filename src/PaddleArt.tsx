@@ -4,7 +4,7 @@ import Svg, { Circle, ClipPath, Defs, G, Line, LinearGradient, Path, RadialGradi
 
 export const GUARD = '#0d1016';
 export const BALL = '#e4f53b';
-/** `pro` faces come with Dink Club Pro. */
+/** `pro` faces come with Pocket Pickle Pro. */
 export type Finish = { name: string; face: string; deep: string; print: string; pro?: boolean };
 export const FINISHES: Finish[] = [
 	{ name: 'Volt', face: '#c8f73a', deep: '#4f7a0c', print: '#1c2a05' },

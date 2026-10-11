@@ -17,5 +17,5 @@ export type Link = {
 	addListener<E extends keyof LinkEvents>(event: E, listener: LinkEvents[E]): { remove(): void };
 };
 
-/** The phone-to-phone link (modules/dink-link). Missing in Expo Go, so rally mode hides itself there. */
-export const link = requireOptionalNativeModule<Link>('DinkLink');
+/** The phone-to-phone link (modules/pickle-link). Missing in Expo Go, so rally mode hides itself there. */
+export const link = requireOptionalNativeModule<Link>('PickleLink');

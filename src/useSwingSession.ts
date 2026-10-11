@@ -112,7 +112,7 @@ export function useSwingSession(options: SessionOptions) {
 				}
 			}, 8000);
 			timer.current = { cancel: () => clearTimeout(timeout) };
-			const tag = 'dink-session-' + id;
+			const tag = 'paddle-session-' + id;
 			activateKeepAwakeAsync(tag).then(() => {
 				if (id !== generation.current) deactivateKeepAwake(tag);
 				else wakeTag.current = tag;

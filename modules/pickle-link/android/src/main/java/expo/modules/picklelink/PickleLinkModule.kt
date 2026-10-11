@@ -1,4 +1,4 @@
-package expo.modules.dinklink
+package expo.modules.picklelink
 
 import android.content.Context
 import android.net.nsd.NsdManager
@@ -13,14 +13,14 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.util.concurrent.Executors
 
-private const val SERVICE_TYPE = "_dinkrally._tcp."
+private const val SERVICE_TYPE = "_pocketpickle._tcp."
 
 /**
  * Two phones find each other with Network Service Discovery (Bonjour) on the same
  * Wi-Fi and rally over one TCP connection. Messages are newline-delimited UTF-8
  * text. State lives on one worker thread; sockets block on their own threads.
  */
-class DinkLinkModule : Module() {
+class PickleLinkModule : Module() {
   private val worker = Executors.newSingleThreadExecutor()
   private var nsd: NsdManager? = null
   private var server: ServerSocket? = null
@@ -32,7 +32,7 @@ class DinkLinkModule : Module() {
   private var myName = ""
 
   override fun definition() = ModuleDefinition {
-    Name("DinkLink")
+    Name("PickleLink")
     Events("onPeers", "onConnected", "onMessage", "onClosed", "onWaiting")
 
     Function("start") { name: String -> worker.execute { start(name) } }

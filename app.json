@@ -1,7 +1,7 @@
 {
 	"expo": {
-		"name": "Dink Club",
-		"slug": "dink-club",
+		"name": "Pocket Pickle",
+		"slug": "pocket-pickle",
 		"version": "1.0.0",
 		"orientation": "portrait",
 		"userInterfaceStyle": "light",
@@ -13,17 +13,17 @@
 		},
 		"ios": {
 			"supportsTablet": true,
-			"bundleIdentifier": "com.dinkclub.app",
+			"bundleIdentifier": "com.leejustin.pocketpickle",
 			"infoPlist": {
 				"ITSAppUsesNonExemptEncryption": false,
-				"NSLocalNetworkUsageDescription": "Dink Club looks for a friend’s phone nearby so you can rally. Nothing leaves your local network.",
+				"NSLocalNetworkUsageDescription": "Pocket Pickle looks for a friend’s phone nearby so you can rally. Nothing leaves your local network.",
 				"NSBonjourServices": [
-					"_dinkrally._tcp"
+					"_pocketpickle._tcp"
 				]
 			}
 		},
 		"android": {
-			"package": "com.dinkclub.app",
+			"package": "com.leejustin.pocketpickle",
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/adaptive-icon.png",
 				"backgroundColor": "#174e38"
@@ -40,7 +40,7 @@
 			[
 				"expo-sensors",
 				{
-					"motionPermission": "Dink Club uses your phone’s motion to turn your swings into pickleball sounds. Motion stays on your device."
+					"motionPermission": "Pocket Pickle uses your phone’s motion to turn your swings into pickleball sounds. Motion stays on your device."
 				}
 			],
 			[
@@ -64,7 +64,7 @@
 			[
 				"expo-image-picker",
 				{
-					"photosPermission": "Dink Club puts a photo you choose on your paddle face. It stays on this phone.",
+					"photosPermission": "Pocket Pickle puts a photo you choose on your paddle face. It stays on this phone.",
 					"cameraPermission": false,
 					"microphonePermission": false
 				}

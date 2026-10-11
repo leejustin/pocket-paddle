@@ -1,4 +1,4 @@
-Dink Club sounds
+Pocket Pickle sounds
 
 All bundled sounds (assets/sounds/*.wav) are original, synthesized by
 scripts/generate_sounds.py. No third-party recording is included in the app.

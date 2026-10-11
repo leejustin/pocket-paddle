@@ -1,7 +1,7 @@
 import ExpoModulesCore
 import Network
 
-private let serviceType = "_dinkrally._tcp"
+private let serviceType = "_pocketpickle._tcp"
 // kDNSServiceErr_PolicyDenied: the person turned off Local Network for the app.
 private let localNetworkDenied: Int32 = -65570
 
@@ -10,8 +10,8 @@ private let localNetworkDenied: Int32 = -65570
  * Peer-to-peer Wi-Fi is on, so two iPhones can connect without sharing a network.
  * Messages are newline-delimited UTF-8 text. Everything runs on one serial queue.
  */
-public class DinkLinkModule: Module {
-  private let queue = DispatchQueue(label: "club.dink.link")
+public class PickleLinkModule: Module {
+  private let queue = DispatchQueue(label: "com.leejustin.pocketpickle.link")
   private var listener: NWListener?
   private var browser: NWBrowser?
   private var connection: NWConnection?
@@ -20,7 +20,7 @@ public class DinkLinkModule: Module {
   private var buffer = Data()
 
   public func definition() -> ModuleDefinition {
-    Name("DinkLink")
+    Name("PickleLink")
     Events("onPeers", "onConnected", "onMessage", "onClosed", "onWaiting")
 
     Function("start") { (name: String) in

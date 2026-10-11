@@ -4,7 +4,7 @@ import type { Pack } from './soundMix';
 /** Preferences only: no scores and no motion data are ever stored. `photo` is a file name in the app's documents. */
 export type Settings = { finish: string; sensitivity: number; pack: Pack; photo?: string };
 export const DEFAULTS: Settings = { finish: 'Volt', sensitivity: 1, pack: 'classic' };
-export const KEY = 'dink-club/settings/v1';
+export const KEY = 'pocket-pickle/settings/v1';
 
 /** Keeps only known keys with the right types, so a bad or old save can't break the app. */
 export function parseSettings(raw: string | null): Settings {

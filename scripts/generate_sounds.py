@@ -9,7 +9,7 @@ contacts (sound-source/pickleball-lincoln.mp3): a dominant "pock" resonance near
 decay that falls 20 dB in roughly 10-20 ms. Two faint ground reflections give
 the dry hit an outdoor court feel.
 
-Run from the dink-club directory:  python3 scripts/generate_sounds.py
+Run from the project root:  python3 scripts/generate_sounds.py
 """
 
 from dataclasses import dataclass

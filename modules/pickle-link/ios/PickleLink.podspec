@@ -1,11 +1,11 @@
 Pod::Spec.new do |s|
-  s.name           = 'DinkLink'
+  s.name           = 'PickleLink'
   s.version        = '1.0.0'
-  s.summary        = 'Finds and connects two nearby Dink Club phones for a rally.'
+  s.summary        = 'Finds and connects two nearby Pocket Pickle phones for a rally.'
   s.description    = s.summary
   s.license        = 'UNLICENSED'
-  s.author         = 'Dink Club'
-  s.homepage       = 'https://example.invalid/dink-club'
+  s.author         = 'Pocket Pickle'
+  s.homepage       = 'https://github.com/leejustin/pocket-pickle'
   s.platforms      = { :ios => '16.4' }
   s.swift_version  = '5.9'
   s.source         = { path: '.' }

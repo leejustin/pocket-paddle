@@ -3,11 +3,11 @@ plugins {
   id 'expo-module-gradle-plugin'
 }
 
-group = 'expo.modules.dinklink'
+group = 'expo.modules.picklelink'
 version = '1.0.0'
 
 android {
-  namespace "expo.modules.dinklink"
+  namespace "expo.modules.picklelink"
   defaultConfig {
     versionCode 1
     versionName "1.0.0"

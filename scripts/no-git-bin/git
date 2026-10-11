@@ -1,4 +1,4 @@
 #!/bin/sh
 # Prevent Expo or its child processes from executing Git in this local-only app.
-echo "Git is disabled for Dink Club." >&2
+echo "Expo commands run without Git in Pocket Pickle." >&2
 exit 1
