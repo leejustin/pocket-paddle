@@ -1,0 +1,8 @@
+Dink Club sounds
+
+All bundled sounds (assets/sounds/*.wav) are original, synthesized by
+scripts/generate_sounds.py. No third-party recording is included in the app.
+
+The synthesis was tuned against measurements of "Pickleball Lincoln Nebraska.mp3"
+by bmccoy2 (CC BY 4.0, https://freesound.org/people/bmccoy2/sounds/477653/).
+That recording is not distributed with the app.
