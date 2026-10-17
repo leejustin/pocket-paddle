@@ -13,7 +13,7 @@
 		},
 		"ios": {
 			"supportsTablet": true,
-			"bundleIdentifier": "com.leejustin.pocketpickle",
+			"bundleIdentifier": "com.pocketpickle.app",
 			"infoPlist": {
 				"ITSAppUsesNonExemptEncryption": false,
 				"NSLocalNetworkUsageDescription": "Pocket Pickle looks for a friend’s phone nearby so you can rally. Nothing leaves your local network.",
@@ -23,7 +23,7 @@
 			}
 		},
 		"android": {
-			"package": "com.leejustin.pocketpickle",
+			"package": "com.pocketpickle.app",
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/adaptive-icon.png",
 				"backgroundColor": "#174e38"

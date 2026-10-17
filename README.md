@@ -22,7 +22,7 @@ The phones talk directly: same Wi-Fi on both platforms, or no Wi-Fi at all betwe
 
 ### Pocket Pickle Pro
 
-A one-time in-app purchase (`com.leejustin.pocketpickle.pro`, a non-consumable) unlocks six silly designs (Pickle Pal, Dill With It, Kitty, Purrkle, Toe Beans, and Pickle Party), the Wood, Carbon, and Thock sounds, the Gold, Carbon, Ice, and Sunset colors, and your own photo on the paddle. The designs are vector art in `src/Designs.tsx`. Locked sounds still play a preview. Purchases go through the App Store or Google Play on the phone (expo-iap); there's no server. Development builds have a "unlock without paying" switch on the Pro page for testing.
+A one-time in-app purchase (`com.pocketpickle.app.pro`, a non-consumable) unlocks six silly designs (Pickle Pal, Dill With It, Kitty, Purrkle, Toe Beans, and Pickle Party), the Wood, Carbon, and Thock sounds, the Gold, Carbon, Ice, and Sunset colors, and your own photo on the paddle. The designs are vector art in `src/Designs.tsx`. Locked sounds still play a preview. Purchases go through the App Store or Google Play on the phone (expo-iap); there's no server. Development builds have a "unlock without paying" switch on the Pro page for testing.
 
 Desktop preview (browsers need a tap on **Grab the paddle** first; there's no motion sensor, so the keyboard stands in: Space pops, Shift+Space hits hard, E catches the edge):
 
@@ -63,6 +63,6 @@ In the iOS Simulator (no motion sensor), development builds swing when you tap t
 
 Before publishing:
 
-- The bundle ID and Android package are `com.leejustin.pocketpickle` (app.json). If you change them, change `PRO_SKU` in `src/usePro.ts` to match.
+- The bundle ID and Android package are `com.pocketpickle.app` (app.json). If you change them, change `PRO_SKU` in `src/usePro.ts` to match.
 - Create the Pro product as a non-consumable in App Store Connect and Google Play Console with that ID and your price.
 - Test purchases with a sandbox account (or a StoreKit configuration file in Xcode) and rallies on real phones.

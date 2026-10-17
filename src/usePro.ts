@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { requireOptionalNativeModule } from 'expo';
 
 /** The one-time Pro unlock. Create a non-consumable with this ID in App Store Connect and Google Play Console. */
-export const PRO_SKU = 'com.leejustin.pocketpickle.pro';
+export const PRO_SKU = 'com.pocketpickle.app.pro';
 const KEY = 'pocket-pickle/pro/v1';
 const TESTING_KEY = 'pocket-pickle/pro/testing';
 // The store lives in the native app; Expo Go and the web preview don't have it.

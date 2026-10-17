@@ -11,7 +11,7 @@ private let localNetworkDenied: Int32 = -65570
  * Messages are newline-delimited UTF-8 text. Everything runs on one serial queue.
  */
 public class PickleLinkModule: Module {
-  private let queue = DispatchQueue(label: "com.leejustin.pocketpickle.link")
+  private let queue = DispatchQueue(label: "com.pocketpickle.app.link")
   private var listener: NWListener?
   private var browser: NWBrowser?
   private var connection: NWConnection?
