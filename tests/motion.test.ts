@@ -171,3 +171,73 @@ test('a clean swing hits the sweet spot; a wobbly one catches the edge', () => {
 	assert.equal(wobbly.length, 1);
 	assert.equal(wobbly[0].mishit, true);
 });
+
+/**
+ * Plays a sequence of strokes about one axis: each is [peak deg/s, length ms],
+ * with a negative peak for the backswing direction. Records when each shot is heard.
+ */
+function strokes(parts: [number, number][], gapBetween = 0) {
+	const detector = new SwingDetector();
+	const heard: { shot: Shot; at: number }[] = [];
+	const peaks: number[] = [];
+	let time = 0;
+	for (let t = 0; t < 300; t += 10) detector.feed(sample(time = t));
+	for (const [peak, length] of parts) {
+		const begin = time;
+		peaks.push(begin + length / 2);
+		for (let offset = 0; offset < length; offset += 10) {
+			const result = detector.feed(sample(time = begin + offset, ZERO, peak * Math.sin(Math.PI * offset / length)));
+			if (result.shot) heard.push({ shot: result.shot, at: time });
+		}
+		for (let pause = 0; pause < gapBetween; pause += 10) {
+			const result = detector.feed(sample(time += 10));
+			if (result.shot) heard.push({ shot: result.shot, at: time });
+		}
+	}
+	for (let rest = 0; rest < 800; rest += 10) {
+		const result = detector.feed(sample(time += 10));
+		if (result.shot) heard.push({ shot: result.shot, at: time });
+	}
+	return { heard, peaks };
+}
+
+test('a slow backswing then a fast swing makes one pop, right at the fast swing', () => {
+	const { heard, peaks } = strokes([[-220, 400], [1000, 240]]);
+	assert.equal(heard.length, 1);
+	assert.ok(Math.abs(heard[0].shot.time - peaks[1]) <= 30, 'timed to the forward swing');
+	assert.ok(heard[0].at - peaks[1] <= 60, 'heard right after the peak, not held back');
+	assert.ok(heard[0].shot.power > 0.4);
+});
+
+test('a quick hard pull-back then a harder swing makes one pop, on the swing', () => {
+	for (const pullBack of [-500, -800]) {
+		const { heard, peaks } = strokes([[pullBack, 200], [1100, 220]]);
+		assert.equal(heard.length, 1, `pull-back ${pullBack}`);
+		assert.ok(Math.abs(heard[0].shot.time - peaks[1]) <= 30, `timed to the forward swing after a ${pullBack} pull-back`);
+	}
+});
+
+test('a short pause at the top of the backswing still makes one pop', () => {
+	const { heard, peaks } = strokes([[-600, 220], [1000, 240]], 90);
+	assert.equal(heard.length, 1);
+	assert.ok(Math.abs(heard[0].shot.time - peaks[1]) <= 30);
+});
+
+test('a hit and its recovery back the other way make one pop, on the hit', () => {
+	const { heard, peaks } = strokes([[1000, 240], [-600, 260]]);
+	assert.equal(heard.length, 1);
+	assert.ok(Math.abs(heard[0].shot.time - peaks[0]) <= 30);
+});
+
+test('two swings closer together than anyone hits make only one pop', () => {
+	assert.equal(strokes([[900, 200], [900, 200]], 60).heard.length, 1);
+	assert.equal(strokes([[900, 200], [900, 200]], 500).heard.length, 2, 'well-spaced swings both pop');
+});
+
+test('a lone swing out of nowhere still pops, just a moment later', () => {
+	const { heard, peaks } = strokes([[900, 240]]);
+	assert.equal(heard.length, 1);
+	// It might have been a wind-up, so it waits to see whether a swing comes back the other way.
+	assert.ok(heard[0].at - peaks[0] <= 360, `heard ${heard[0].at - peaks[0]} ms after the peak`);
+	assert.ok(Math.abs(heard[0].shot.time - peaks[0]) <= 30, 'but timed to the peak');
+});

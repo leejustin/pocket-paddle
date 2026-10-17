@@ -21,13 +21,30 @@ const FULL_POWER = 1500;
 const FULL_GLOW = 1100;
 // Below this axis coherence the paddle face wobbled through contact: an edge hit.
 const MISHIT_COHERENCE = 0.6;
+// Nobody hits two balls closer together than this (ms), so anything sooner is the same stroke.
+const MIN_GAP = 500;
+// A possible wind-up waits this long (ms) after the phone stops at the top for the real swing
+// to come back the other way, and never longer than MAX_HOLD after its peak.
+const HOLD = 180;
+const MAX_HOLD = 700;
+// How quickly earlier rotation fades from memory when judging what came before a swing (s).
+const RECENT_TAU = 0.35;
 
-type Swing = { start: number; peak: number; active: number; turn: Vector; turned: number };
+/**
+ * One continuous burst of paddle motion. `before` is how the phone had been
+ * turning just before it started, to tell a wind-up from the swing that follows.
+ */
+type Stroke = { start: number; peak: number; peakTime: number; active: number; turn: Vector; turned: number; before: Vector };
 
 /**
  * Frame-rate-independent swing detector. Fires on the first sample after the
  * swing-speed peak — the moment a real paddle would meet the ball — rather than
  * waiting for the whole gesture to finish.
+ *
+ * A real stroke is a backswing followed by a faster swing the other way, and
+ * only the second one meets the ball. A swing that follows rotation the other
+ * way fires at once. A fast swing out of nowhere might be a wind-up, so it waits
+ * briefly: if a stronger swing comes back the other way, that one is the hit.
  */
 export class SwingDetector {
 	private lastTime: number | undefined;
@@ -35,7 +52,10 @@ export class SwingDetector {
 	private drive = 0;
 	private glow = 0;
 	private noise = 40;
-	private swing: Swing | undefined;
+	private recent: Vector = { x: 0, y: 0, z: 0 };
+	private stroke: Stroke | undefined;
+	private pending: Stroke | undefined;
+	private pendingStill: number | undefined;
 	private lastHit = -Infinity;
 	private lastPeak = 0;
 	private armed = true;
@@ -51,7 +71,10 @@ export class SwingDetector {
 		this.drive = 0;
 		this.glow = 0;
 		this.noise = 40;
-		this.swing = undefined;
+		this.recent = { x: 0, y: 0, z: 0 };
+		this.stroke = undefined;
+		this.pending = undefined;
+		this.pendingStill = undefined;
 		this.lastHit = -Infinity;
 		this.lastPeak = 0;
 		this.armed = true;
@@ -80,42 +103,87 @@ export class SwingDetector {
 		const tau = target > this.glow ? 0.02 : 0.09;
 		this.glow += (target - this.glow) * (1 - Math.exp(-dt / tau));
 		if (raw < START * 0.5) this.noise += (raw - this.noise) * 0.02;
+		// Remember which way the phone has been turning lately, fading over a few hundred ms.
+		const fade = Math.exp(-dt / RECENT_TAU);
+		this.recent = { x: this.recent.x * fade + rotationRate.x * dt, y: this.recent.y * fade + rotationRate.y * dt, z: this.recent.z * fade + rotationRate.z * dt };
 		const scale = 1.35 - this.sensitivity * 0.7;
 		const start = Math.max(START * scale, this.noise * 3.5);
 		const hit = Math.max(HIT * scale, start * 1.5);
 
+		let shot: Shot | undefined;
+		// A possible wind-up that nothing answered was the hit after all.
+		if (this.pending && !this.stroke) {
+			if (this.drive >= start * 0.4) this.pendingStill = undefined;
+			else this.pendingStill ??= sample.time;
+			const waited = this.pendingStill !== undefined && sample.time - this.pendingStill > HOLD;
+			if (waited || sample.time - this.pending.peakTime > MAX_HOLD) shot = this.release();
+		}
 		if (!this.armed) {
-			// Follow-through and the recovery swing must settle before the next shot.
-			const settled = this.drive < Math.max(start, this.lastPeak * 0.4);
-			if (settled && sample.time - this.lastHit >= 160) this.armed = true;
-			else return { swing: this.glow };
+			// The next stroke starts once this one slows right down: the turnaround at the top of a
+			// wind-up, or the end of a follow-through. MIN_GAP keeps a follow-through from popping again.
+			if (this.drive < Math.max(start, this.lastPeak * 0.4)) this.armed = true;
+			else return { swing: this.glow, shot };
 		}
-		if (!this.swing) {
-			if (this.drive < start) return { swing: this.glow };
-			this.swing = { start: sample.time, peak: this.drive, active: 0, turn: { x: 0, y: 0, z: 0 }, turned: 0 };
+		if (!this.stroke) {
+			if (this.drive < start) return { swing: this.glow, shot };
+			this.stroke = { start: sample.time, peak: this.drive, peakTime: sample.time, active: 0, turn: { x: 0, y: 0, z: 0 }, turned: 0, before: { ...this.recent } };
 		}
-		const swing = this.swing;
+		const stroke = this.stroke;
 		// Count real sensor frames above threshold; one glitchy frame is not a swing.
-		if (raw >= start) swing.active++;
-		// Integrate rotation to learn how steady the swing's axis was.
-		swing.turn = { x: swing.turn.x + rotationRate.x * dt, y: swing.turn.y + rotationRate.y * dt, z: swing.turn.z + rotationRate.z * dt };
-		swing.turned += rotation * dt;
-		swing.peak = Math.max(swing.peak, this.drive);
-		const duration = sample.time - swing.start;
-		// A quick return right after a hit needs a deliberate swing, not a recoil.
-		const recovering = sample.time - this.lastHit < 450;
-		const required = recovering ? Math.max(hit * 1.4, this.lastPeak * 0.7) : hit;
-		if (swing.peak >= required && swing.active >= 2 && this.drive < swing.peak * 0.88) {
-			const shot = makeShot(swing.peak, sample.time, wobbled(swing));
-			this.lastHit = sample.time;
-			this.lastPeak = swing.peak;
+		if (raw >= start) stroke.active++;
+		// Integrate rotation to learn the stroke's direction and how steady its axis was.
+		stroke.turn = { x: stroke.turn.x + rotationRate.x * dt, y: stroke.turn.y + rotationRate.y * dt, z: stroke.turn.z + rotationRate.z * dt };
+		stroke.turned += rotation * dt;
+		if (this.drive > stroke.peak) { stroke.peak = this.drive; stroke.peakTime = sample.time; }
+		const duration = sample.time - stroke.start;
+		// A stroke has to speed up first; the fading end of the last one never counts.
+		const rose = stroke.peakTime > stroke.start;
+		if (rose && stroke.peak >= hit && stroke.active >= 2 && this.drive < stroke.peak * 0.88) {
+			this.stroke = undefined;
 			this.armed = false;
-			this.swing = undefined;
-			return { swing: this.glow, shot };
+			this.lastPeak = stroke.peak;
+			return { swing: this.glow, shot: this.decide(stroke) ?? shot };
 		}
 		// Slow turns (looking at the screen, setting the phone down) never get a pop.
-		if (this.drive < start * 0.7 || duration > 550) this.swing = undefined;
-		return { swing: this.glow };
+		if (this.drive < start * 0.7 || duration > 550) {
+			this.stroke = undefined;
+			// A weak return the other way after a possible wind-up means the wind-up was the hit.
+			// (The fading tail of the same stroke doesn't count.)
+			if (this.pending && opposite(this.pending.turn, stroke.turn)) shot = this.release() ?? shot;
+		}
+		return { swing: this.glow, shot };
+	}
+
+	/** A stroke just passed its peak hard enough to be a hit. Returns the shot to play now, if any. */
+	private decide(stroke: Stroke): Shot | undefined {
+		const pending = this.pending;
+		if (pending) {
+			this.pending = undefined;
+			// The wind-up came first; the stronger swing back the other way is what meets the ball.
+			if (opposite(pending.turn, stroke.turn) && stroke.peak >= pending.peak * 0.9) return this.fire(stroke);
+			// Otherwise the earlier stroke was the hit, and this is its recovery or follow-through.
+			return this.fire(pending);
+		}
+		// Following a backswing, this is the real swing. Out of nowhere, it might be a wind-up, so wait.
+		if (hasAxis(stroke) && !opposite(stroke.before, stroke.turn, 6)) {
+			this.pending = stroke;
+			this.pendingStill = undefined;
+			return undefined;
+		}
+		return this.fire(stroke);
+	}
+
+	private release() {
+		const pending = this.pending;
+		this.pending = undefined;
+		return pending && this.fire(pending);
+	}
+
+	/** The shot happened at the stroke's peak, even when it's decided a moment later. */
+	private fire(stroke: Stroke): Shot | undefined {
+		if (stroke.peakTime - this.lastHit < MIN_GAP) return undefined;
+		this.lastHit = stroke.peakTime;
+		return makeShot(stroke.peak, stroke.peakTime, wobbled(stroke));
 	}
 
 	private linearAcceleration(sample: MotionSample, dt: number): Vector {
@@ -136,9 +204,21 @@ export function makeShot(peak: number, time: number, mishit = false): Shot {
 }
 
 /** A swing whose rotation axis wandered through contact catches the edge guard. */
-function wobbled(swing: Swing) {
+function wobbled(stroke: Stroke) {
 	// Straight pushes barely rotate, so they have no meaningful axis to judge.
-	return swing.turned > 20 && magnitude(swing.turn) / swing.turned < MISHIT_COHERENCE;
+	return stroke.turned > 20 && magnitude(stroke.turn) / stroke.turned < MISHIT_COHERENCE;
+}
+
+/** Straight pushes barely rotate, so they have no direction to compare. */
+function hasAxis(stroke: Stroke) {
+	return stroke.turned > 20 && magnitude(stroke.turn) > 15;
+}
+
+/** True when two rotations (degrees turned) clearly go opposite ways; `min` ignores tiny ones. */
+function opposite(a: Vector, b: Vector, min = 15) {
+	const lengths = magnitude(a) * magnitude(b);
+	if (magnitude(a) < min || magnitude(b) < min) return false;
+	return (a.x * b.x + a.y * b.y + a.z * b.z) / lengths < -0.3;
 }
 
 function magnitude(v: Vector) { return Math.hypot(v.x, v.y, v.z); }
