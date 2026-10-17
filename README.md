@@ -38,7 +38,7 @@ After copying this directory elsewhere, run `npm ci` to restore its locked depen
 - **Audio:** one mixer (`src/mixer.ts`) plays everything. In a local development build it uses `react-native-audio-api` for the lowest delay; Expo Go falls back to expo-audio automatically; the browser uses Web Audio.
 - With the system Reduce Motion setting on, the face doesn't shake or flash.
 
-No account, microphone, camera, or analytics. The only outside service is RevenueCat, used only for the Pro purchase: it sees an anonymous customer ID and the purchase history. Your settings and paddle photo stay on the phone. The photo is copied into the app's private storage; the app never reads the rest of your library. Solo play works offline.
+No account, microphone, camera, or analytics. The only outside service is RevenueCat, used only for the Pro purchase: it sees an anonymous customer ID and the purchase history. Your settings and paddle photo stay on the phone. See the [privacy policy](PRIVACY.md) and [support page](SUPPORT.md). The photo is copied into the app's private storage; the app never reads the rest of your library. Solo play works offline.
 
 ## Checks
 
