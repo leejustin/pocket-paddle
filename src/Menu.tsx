@@ -23,7 +23,7 @@ type MenuProps = {
 	sensitivity: number; onSensitivity: (index: number) => void;
 	pro: Pro;
 	/** Missing where rally mode isn't available (Expo Go, the web). */
-	rally?: { playing: boolean; onFind: () => void; onLeave: () => void };
+	rally?: { playing: boolean; onFind: () => void; onLeave: () => void; buzz: boolean; onBuzz: (on: boolean) => void };
 };
 
 export function Menu(props: MenuProps) {
@@ -106,11 +106,14 @@ export function Menu(props: MenuProps) {
 							<Text style={styles.outlineText}>Leave the rally</Text>
 						</Pressable>
 						: <>
-							<Text style={styles.body}>Two phones, one rally. Swing when you hear the ball bounce.</Text>
+							<Text style={styles.body}>Two phones, one rally. Swing any time the ring shows; the bounce is the sweet spot.</Text>
 							<Pressable onPress={() => { props.rally?.onFind(); onClose(); }} accessibilityRole="button" style={styles.outline}>
 								<Text style={styles.outlineText}>Find a friend nearby</Text>
 							</Pressable>
 						</>}
+					<Text style={styles.label}>Buzz when it’s time to swing</Text>
+					<Segments accent={finish} value={props.rally.buzz ? 'on' : 'off'} onChange={value => props.rally?.onBuzz(value === 'on')}
+						options={[{ value: 'on', label: 'On' }, { value: 'off', label: 'Off' }]} />
 				</>}
 
 				{!pro.owned && <Pressable onPress={() => setPage('pro')} accessibilityRole="button" style={styles.proCard}>

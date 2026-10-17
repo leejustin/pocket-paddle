@@ -63,7 +63,7 @@ function PhonePaddle() {
 	const impact = useRef(new Animated.Value(0)).current;
 	const shake = useRef(new Animated.Value(0)).current;
 	const audio = usePaddleAudio(pack);
-	const rally = useRally(audio.cue);
+	const rally = useRally(audio.cue, settings.swingBuzz);
 	const onMotion = useCallback((value: number, side: number) => { swing.setValue(value); tilt.setValue(side); }, [swing, tilt]);
 	const session = useSwingSession({ ...audio, onMotion, accept: rally.accept });
 	const sweet = { x: width / 2, y: height * 0.4, r: Math.min(width, height) * 0.17 };
@@ -178,7 +178,8 @@ function PhonePaddle() {
 			pack={pack} onPack={choice => update({ pack: choice })} onPreview={audio.preview}
 			sensitivity={settings.sensitivity} onSensitivity={sensitivity => update({ sensitivity })}
 			pro={pro}
-			rally={rally.available ? { playing: rally.view.kind === 'playing', onFind: rally.find, onLeave: rally.leave } : undefined} />
+			rally={rally.available ? { playing: rally.view.kind === 'playing', onFind: rally.find, onLeave: rally.leave,
+				buzz: settings.swingBuzz, onBuzz: swingBuzz => update({ swingBuzz }) } : undefined} />
 		{rally.view.kind === 'lobby' && <RallyLobby view={rally.view} finish={finish} onJoin={rally.join} onCancel={rally.leave} />}
 	</View>;
 }

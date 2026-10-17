@@ -14,7 +14,7 @@
 		"ios": {
 			"supportsTablet": false,
 			"bundleIdentifier": "com.pocketpickle.app",
-			"buildNumber": "2",
+			"buildNumber": "5",
 			"infoPlist": {
 				"ITSAppUsesNonExemptEncryption": false,
 				"NSLocalNetworkUsageDescription": "Pocket Pickle looks for a friend’s phone nearby so you can rally. Nothing leaves your local network.",

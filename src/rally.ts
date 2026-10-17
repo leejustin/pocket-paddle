@@ -6,12 +6,18 @@ import type { Shot } from './motion';
  * phone it's flying toward, so the two phones never disagree about a point.
  */
 export const PROTOCOL = 1;
-/** How early and late (ms) a swing still meets the ball around its arrival. */
-export const EARLY = 450;
-export const LATE = 250;
+/**
+ * How early and late (ms) a swing still meets the ball around its arrival.
+ * Deliberately generous: a 2.5 s window, so a rally feels fun instead of frame-perfect.
+ */
+export const EARLY = 1500;
+export const LATE = 1000;
 /** The ball bounces this long (ms) before it reaches the paddle: the cue to swing. */
 export const BOUNCE_LEAD = 380;
 export const POINT_PAUSE = 1800;
+/** Gap (ms) to the first heartbeat buzz after the window opens; each one comes sooner, down to MIN_BEAT. */
+export const FIRST_BEAT = 380;
+const MIN_BEAT = 110;
 const MAX_LATENCY = 150;
 
 export type EndReason = 'miss' | 'out';
@@ -26,13 +32,19 @@ export type Message =
 export type Phase =
 	| { kind: 'serve'; mine: boolean }
 	| { kind: 'away'; launched: number; flight: number }
-	| { kind: 'incoming'; launched: number; arrival: number; bounced: boolean }
+	| { kind: 'incoming'; launched: number; arrival: number; bounced: boolean; opened: boolean; beatAt: number; gap: number }
 	| { kind: 'point'; won: boolean; why: EndReason; until: number };
 
 /** `count` is the number of shots in the current rally; `latency` is the one-way delay estimate (ms). */
 export type Rally = { phase: Phase; count: number; me: number; them: number; best: number; latency: number };
+/**
+ * Haptic cues for the incoming ball: `coming` when it leaves the other paddle, `open` when a swing would
+ * meet it, a quickening `beat` while the window is open, and `now` on the bounce.
+ */
+export type Buzz = 'coming' | 'open' | 'beat' | 'now';
 export type Effect =
 	| { kind: 'send'; message: Message }
+	| { kind: 'buzz'; name: Buzz }
 	| { kind: 'sound'; name: 'bounce' | 'dead-ball' }
 	| { kind: 'point'; won: boolean };
 type Step = { rally: Rally; effects: Effect[] };
@@ -41,9 +53,9 @@ export function newRally(serveFirst: boolean): Rally {
 	return { phase: { kind: 'serve', mine: serveFirst }, count: 0, me: 0, them: 0, best: 0, latency: 0 };
 }
 
-/** Harder shots fly faster. */
+/** Harder shots fly faster: 3.2 s for a soft one down to 2 s for a full swing. */
 export function flightFor(power: number): number {
-	return Math.round(1500 - 650 * clamp(power, 0, 1));
+	return Math.round(3200 - 1200 * clamp(power, 0, 1));
 }
 
 /** True while a swing would meet the incoming ball. */
@@ -74,8 +86,9 @@ export function swing(rally: Rally, shot: Shot, now: number): Step & { played: b
 export function receive(rally: Rally, message: Message, now: number): Step {
 	switch (message.t) {
 		case 'hit': {
-			const flight = clamp(message.flight, 300, 3000);
-			return { rally: { ...rally, count: message.n, phase: { kind: 'incoming', launched: now, arrival: now + flight - rally.latency, bounced: false } }, effects: [] };
+			const flight = clamp(message.flight, 300, 5000);
+			const phase: Phase = { kind: 'incoming', launched: now, arrival: now + flight - rally.latency, bounced: false, opened: false, beatAt: 0, gap: FIRST_BEAT };
+			return { rally: { ...rally, count: message.n, phase }, effects: [{ kind: 'buzz', name: 'coming' }] };
 		}
 		case 'end': {
 			const best = Math.max(rally.best, rally.count);
@@ -96,7 +109,7 @@ export function receive(rally: Rally, message: Message, now: number): Step {
 	}
 }
 
-/** Advances time: the bounce cue, a ball that got past you, and the pause after a point. */
+/** Advances time: the swing cues and bounce, a ball that got past you, and the pause after a point. */
 export function tick(rally: Rally, now: number): Step {
 	const { phase } = rally;
 	if (phase.kind === 'incoming') {
@@ -104,8 +117,15 @@ export function tick(rally: Rally, now: number): Step {
 			const lost = lose(rally, 'miss', now);
 			return { rally: lost.rally, effects: [{ kind: 'sound', name: 'dead-ball' }, ...lost.effects] };
 		}
+		if (!phase.opened && now >= phase.arrival - EARLY) {
+			return { rally: { ...rally, phase: { ...phase, opened: true, beatAt: now + phase.gap } }, effects: [{ kind: 'buzz', name: 'open' }] };
+		}
 		if (!phase.bounced && now >= phase.arrival - BOUNCE_LEAD) {
-			return { rally: { ...rally, phase: { ...phase, bounced: true } }, effects: [{ kind: 'sound', name: 'bounce' }] };
+			return { rally: { ...rally, phase: { ...phase, bounced: true } }, effects: [{ kind: 'sound', name: 'bounce' }, { kind: 'buzz', name: 'now' }] };
+		}
+		if (phase.opened && !phase.bounced && now >= phase.beatAt) {
+			const gap = Math.max(MIN_BEAT, Math.round(phase.gap * 0.72));
+			return { rally: { ...rally, phase: { ...phase, beatAt: now + gap, gap } }, effects: [{ kind: 'buzz', name: 'beat' }] };
 		}
 	}
 	if (phase.kind === 'point' && now >= phase.until) {

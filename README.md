@@ -16,7 +16,7 @@ The ••• button has the paddle face, sound, and swing sensitivity (plus "pu
 
 ### Rally with a friend
 
-Off unless someone turns it on: ••• → **Find a friend nearby** on both phones, then tap the other phone's name. Whoever taps serves. Swing to hit the ball to the other phone; it grows on their screen, bounces (listen for it), and they have to swing back in time. Swinging when there's no ball makes no sound, like a real paddle. Catching the edge sends the ball out. The point winner serves next.
+Off unless someone turns it on: ••• → **Find a friend nearby** on both phones, then tap the other phone's name. Whoever taps serves. Swing to hit the ball to the other phone; it grows on their screen and they swing back any time in a generous 2.5-second window. Their phone buzzes as the ball comes in: a soft tap, a double tap when the window opens, a quickening pulse, and a thump on the bounce, the sweet spot (turn the buzz off in •••). Swinging when there's no ball makes no sound, like a real paddle. Catching the edge sends the ball out. The point winner serves next.
 
 The phones talk directly: same Wi-Fi on both platforms, or no Wi-Fi at all between two iPhones (Apple's peer-to-peer Wi-Fi). Nothing goes through a server. Rally mode needs a native build; it's hidden in Expo Go and the browser.
 
