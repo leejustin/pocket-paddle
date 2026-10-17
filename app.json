@@ -14,6 +14,7 @@
 		"ios": {
 			"supportsTablet": false,
 			"bundleIdentifier": "com.pocketpickle.app",
+			"buildNumber": "2",
 			"infoPlist": {
 				"ITSAppUsesNonExemptEncryption": false,
 				"NSLocalNetworkUsageDescription": "Pocket Pickle looks for a friend’s phone nearby so you can rally. Nothing leaves your local network.",
@@ -46,7 +47,7 @@
 			[
 				"expo-audio",
 				{
-					"microphonePermission": false,
+					"microphonePermission": "Pocket Pickle never records audio and never asks for the microphone. Its audio library includes recording code it doesn’t use.",
 					"recordAudioAndroid": false,
 					"enableBackgroundPlayback": false,
 					"enableBackgroundRecording": false
