@@ -70,7 +70,8 @@
 				}
 			],
 			"expo-iap",
-			"./plugins/with-scene-lifecycle.cjs"
+			"./plugins/with-scene-lifecycle.cjs",
+			"./plugins/with-source-built-modules.cjs"
 		]
 	}
 }
