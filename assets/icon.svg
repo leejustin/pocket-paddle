@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs>
+<radialGradient id="bg" cx="0.3" cy="0.2" r="1"><stop offset="0" stop-color="#2b8a5e"/><stop offset="0.55" stop-color="#17573c"/><stop offset="1" stop-color="#0a2c1f"/></radialGradient>
+<radialGradient id="ballG" cx="0.35" cy="0.3" r="0.85"><stop offset="0" stop-color="#fffbb0"/><stop offset="0.55" stop-color="#ffe838"/><stop offset="1" stop-color="#e0b800"/></radialGradient>
+<linearGradient id="face" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ddff66"/><stop offset="1" stop-color="#8fc21f"/></linearGradient>
+<linearGradient id="grip" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#14171d"/><stop offset="0.5" stop-color="#3a4250"/><stop offset="1" stop-color="#14171d"/></linearGradient>
+<linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0.4"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#000" flood-opacity="0.4"/></filter>
+</defs>
+<rect width="1024" height="1024" fill="url(#bg)"/>
+<g transform="translate(-50 40) rotate(-16 512 560)" filter="url(#sh)">
+  <rect x="456" y="800" width="112" height="280" rx="40" fill="url(#grip)"/>
+  <g stroke="#0d1016" stroke-opacity="0.55" stroke-width="7"><line x1="460" y1="870" x2="564" y2="852"/><line x1="460" y1="930" x2="564" y2="912"/><line x1="460" y1="990" x2="564" y2="972"/></g>
+  <rect x="292" y="220" width="440" height="620" rx="100" fill="#0d1016"/>
+  <rect x="310" y="238" width="404" height="584" rx="84" fill="url(#face)"/>
+  <rect x="310" y="238" width="404" height="270" rx="84" fill="url(#sheen)"/>
+  <rect x="456" y="258" width="112" height="30" rx="15" fill="#0d1016"/>
+</g>
+<g stroke="#ffffff" stroke-linecap="round" stroke-width="18" opacity="0.9">
+  <line x1="610" y1="395" x2="575" y2="350"/><line x1="660" y1="440" x2="650" y2="380"/><line x1="585" y1="460" x2="530" y2="440"/>
+</g>
+<g filter="url(#sh)"><g transform="translate(760 270) scale(140)">
+  <circle r="1" fill="url(#ballG)"/>
+  <g fill="#9a8a00" opacity="0.45">
+    <circle cx="0" cy="-0.55" r="0.12"/><circle cx="-0.5" cy="-0.12" r="0.12"/><circle cx="0.5" cy="-0.12" r="0.12"/>
+    <circle cx="-0.3" cy="0.48" r="0.12"/><circle cx="0.3" cy="0.48" r="0.12"/><circle cx="0" cy="0.05" r="0.1"/>
+  </g>
+  <ellipse cx="-0.35" cy="-0.45" rx="0.32" ry="0.17" fill="#fff" opacity="0.55" transform="rotate(-35 -0.35 -0.45)"/>
+</g></g>
+</svg>

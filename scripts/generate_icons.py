@@ -1,4 +1,4 @@
-"""Create original app icons from simple geometry."""
+"""Create the Android adaptive icon and splash artwork from simple geometry."""
 from pathlib import Path
 from PIL import Image, ImageDraw
 
@@ -16,13 +16,11 @@ def draw_ball(image, center, radius):
         cx, cy = x + dx * radius, y + dy * radius
         draw.ellipse((cx-hole, cy-hole, cx+hole, cy+hole), fill=green)
 
-icon = Image.new('RGB', (1024, 1024), green)
-draw_ball(icon, (512, 512), 330)
-icon.save(root / 'icon.png')
+# The iOS app icon is drawn separately: assets/icon.svg, exported to icon.png as an opaque 1024x1024 PNG.
 adaptive = Image.new('RGBA', (1024, 1024), (0, 0, 0, 0))
 draw_ball(adaptive, (512, 512), 270)
 adaptive.save(root / 'adaptive-icon.png')
 splash = Image.new('RGBA', (600, 600), (0, 0, 0, 0))
 draw_ball(splash, (300, 300), 170)
 splash.save(root / 'splash.png')
-print('Generated app icon, adaptive icon, and splash artwork.')
+print('Generated adaptive icon and splash artwork.')
