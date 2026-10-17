@@ -1,102 +1,101 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { NativeModules, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { requireOptionalNativeModule } from 'expo';
+import type { CustomerInfo, PurchasesPackage } from 'react-native-purchases';
 
-/** The one-time Pro unlock. Create a non-consumable with this ID in App Store Connect and Google Play Console. */
+/** The one-time Pro unlock, a non-consumable in App Store Connect, sold through RevenueCat. */
 export const PRO_SKU = 'com.pocketpickle.app.pro';
+/** The RevenueCat entitlement the Pro product grants. */
+const ENTITLEMENT = 'pocket_pickle_pro';
+// Public SDK keys, which are meant to ship inside the app. Development builds use
+// RevenueCat's Test Store, which simulates purchases without touching the App Store.
+const SDK_KEYS = { test: 'test_UPiAJdrIfydGAizcoAxJHpBAaCV', ios: 'appl_sJBXupFGODbByZYKSgfXtOxzNnE' };
+const API_KEY = __DEV__ ? SDK_KEYS.test : Platform.OS === 'ios' ? SDK_KEYS.ios : undefined;
 const KEY = 'pocket-pickle/pro/v1';
 const TESTING_KEY = 'pocket-pickle/pro/testing';
 // The store lives in the native app; Expo Go and the web preview don't have it.
-const STORE = Platform.OS !== 'web' && requireOptionalNativeModule('ExpoIap') != null;
+const STORE = Platform.OS !== 'web' && API_KEY != null && NativeModules.RNPurchases != null;
+let configured = false;
+
+async function purchases() {
+	const { default: Purchases } = await import('react-native-purchases');
+	if (!configured) {
+		Purchases.configure({ apiKey: API_KEY! });
+		configured = true;
+	}
+	return Purchases;
+}
 
 export type Pro = ReturnType<typeof usePro>;
 
 /**
- * Whether Pro is unlocked, and the purchase flow. The store's own record decides;
- * a local copy only keeps Pro on while the store is still answering at launch.
+ * Whether Pro is unlocked, and the purchase flow. RevenueCat's record decides;
+ * a local copy only keeps Pro on while it's still answering at launch.
  */
 export function usePro() {
 	const [owned, setOwned] = useState(false);
 	const [testing, setTesting] = useState(false);
-	const [price, setPrice] = useState<string>();
+	const [offer, setOffer] = useState<PurchasesPackage>();
 	const [busy, setBusy] = useState(false);
 	const [message, setMessage] = useState<string>();
-	const offered = useRef(false);
 	const grant = useCallback((value: boolean) => {
 		setOwned(value);
 		if (value) setMessage(undefined);
 		AsyncStorage.setItem(KEY, value ? '1' : '0').catch(cause => console.warn('Could not save Pro', cause));
 	}, []);
+	const apply = useCallback((info: CustomerInfo) => grant(info.entitlements.active[ENTITLEMENT] != null), [grant]);
 
 	useEffect(() => {
 		let mounted = true;
-		const subscriptions: { remove(): void }[] = [];
 		AsyncStorage.getItem(KEY).then(saved => { if (mounted && saved === '1') setOwned(true); })
 			.catch(cause => console.warn('Could not read Pro', cause));
 		if (__DEV__) AsyncStorage.getItem(TESTING_KEY).then(saved => { if (mounted) setTesting(saved === '1'); }).catch(() => undefined);
 		if (!STORE) return () => { mounted = false; };
+		const listener = (info: CustomerInfo) => { if (mounted) apply(info); };
 		(async () => {
-			const iap = await import('expo-iap');
-			if (!mounted) return;
-			subscriptions.push(iap.purchaseUpdatedListener(purchase => {
-				if (purchase.productId !== PRO_SKU) return;
-				if (purchase.purchaseState === 'pending') { setMessage('Waiting for the purchase to be approved…'); return; }
-				if (purchase.purchaseState !== 'purchased') return;
-				grant(true);
-				setBusy(false);
-				setMessage(undefined);
-				// A non-consumable must be finished so the store stops replaying it.
-				iap.finishTransaction({ purchase, isConsumable: false }).catch(cause => console.warn('Could not finish purchase', cause));
-			}));
-			subscriptions.push(iap.purchaseErrorListener(error => {
-				setBusy(false);
-				if (!iap.isUserCancelledError(error)) setMessage(error.message || 'The purchase didn’t go through.');
-			}));
-			await iap.initConnection();
-			const products = await iap.fetchProducts({ skus: [PRO_SKU], type: 'in-app' });
-			const product = products?.find(item => item.id === PRO_SKU);
-			offered.current = product != null;
-			if (mounted && product) setPrice(product.displayPrice);
-			const purchases = await iap.getAvailablePurchases();
-			if (mounted) grant(purchases.some(purchase => purchase.productId === PRO_SKU));
+			const Purchases = await purchases();
+			Purchases.addCustomerInfoUpdateListener(listener);
+			const offerings = await Purchases.getOfferings();
+			const lifetime = offerings.current?.lifetime ?? offerings.current?.availablePackages[0];
+			if (mounted && lifetime) setOffer(lifetime);
+			listener(await Purchases.getCustomerInfo());
 		})().catch(cause => console.warn('Store unavailable', cause));
 		return () => {
 			mounted = false;
-			subscriptions.forEach(subscription => subscription.remove());
-			import('expo-iap').then(iap => iap.endConnection()).catch(() => undefined);
+			purchases().then(Purchases => Purchases.removeCustomerInfoUpdateListener(listener)).catch(() => undefined);
 		};
-	}, [grant]);
+	}, [apply]);
 
 	const buy = useCallback(async () => {
 		if (!STORE) return;
-		if (!offered.current) { setMessage('Pro isn’t available in the store yet.'); return; }
+		if (!offer) { setMessage('Pro isn’t available in the store yet.'); return; }
 		setBusy(true);
 		setMessage(undefined);
 		try {
-			const iap = await import('expo-iap');
-			await iap.requestPurchase({ request: { apple: { sku: PRO_SKU }, google: { skus: [PRO_SKU] } }, type: 'in-app' });
+			const { customerInfo } = await (await purchases()).purchasePackage(offer);
+			apply(customerInfo);
 		} catch (cause) {
+			if (!(cause as { userCancelled?: boolean | null }).userCancelled) {
+				setMessage(cause instanceof Error ? cause.message : 'The purchase didn’t go through.');
+			}
+		} finally {
 			setBusy(false);
-			setMessage(cause instanceof Error ? cause.message : 'The purchase didn’t go through.');
 		}
-	}, []);
+	}, [offer, apply]);
 	const restore = useCallback(async () => {
 		if (!STORE) return;
 		setBusy(true);
 		setMessage(undefined);
 		try {
-			const iap = await import('expo-iap');
-			await iap.restorePurchases();
-			const has = (await iap.getAvailablePurchases()).some(purchase => purchase.productId === PRO_SKU);
-			grant(has);
-			if (!has) setMessage('No Pro purchase found for this account.');
+			const info = await (await purchases()).restorePurchases();
+			apply(info);
+			if (info.entitlements.active[ENTITLEMENT] == null) setMessage('No Pro purchase found for this account.');
 		} catch (cause) {
 			setMessage(cause instanceof Error ? cause.message : 'Couldn’t reach the store.');
 		} finally {
 			setBusy(false);
 		}
-	}, [grant]);
+	}, [apply]);
 	/** Development builds only: flip Pro on and off without the store. Kept apart from the store's answer. */
 	const toggleForTesting = __DEV__ ? () => {
 		setTesting(!testing);
@@ -104,5 +103,5 @@ export function usePro() {
 		AsyncStorage.setItem(TESTING_KEY, testing ? '0' : '1').catch(() => undefined);
 	} : undefined;
 
-	return { owned: owned || testing, price, available: STORE, busy, message, buy, restore, toggleForTesting };
+	return { owned: owned || testing, price: offer?.product.priceString, available: STORE, busy, message, buy, restore, toggleForTesting };
 }

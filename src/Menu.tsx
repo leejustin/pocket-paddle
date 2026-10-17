@@ -118,7 +118,7 @@ export function Menu(props: MenuProps) {
 					<Text style={styles.proCopy}>Pickle and cat designs, Wood, Carbon and Thock sounds, four more colors, and your own photo on the paddle.</Text>
 				</Pressable>}
 
-				<Text style={styles.fine}>Hold on tight and give yourself room. Sounds are synthesized on-device from measurements of real pickleball contacts. Works offline; only your settings and paddle photo are saved, on this phone.</Text>
+				<Text style={styles.fine}>Hold on tight and give yourself room. Sounds are synthesized on-device from measurements of real pickleball contacts. Works offline. Your settings and paddle photo stay on this phone; Pro purchases are checked with the App Store through RevenueCat.</Text>
 				<Pressable onPress={onClose} accessibilityRole="button" style={[styles.done, { backgroundColor: finish.face }]}><Text style={[styles.doneText, { color: finish.print }]}>Back to swinging</Text></Pressable>
 				{onPutDown && <Pressable onPress={onPutDown} accessibilityRole="button" style={styles.putDown}><Text style={styles.putDownText}>Put the paddle down</Text></Pressable>}
 			</>}

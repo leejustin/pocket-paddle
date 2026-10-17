@@ -22,7 +22,7 @@ The phones talk directly: same Wi-Fi on both platforms, or no Wi-Fi at all betwe
 
 ### Pocket Pickle Pro
 
-A one-time in-app purchase (`com.pocketpickle.app.pro`, a non-consumable) unlocks six silly designs (Pickle Pal, Dill With It, Kitty, Purrkle, Toe Beans, and Pickle Party), the Wood, Carbon, and Thock sounds, the Gold, Carbon, Ice, and Sunset colors, and your own photo on the paddle. The designs are vector art in `src/Designs.tsx`. Locked sounds still play a preview. Purchases go through the App Store or Google Play on the phone (expo-iap); there's no server. Development builds have a "unlock without paying" switch on the Pro page for testing.
+A one-time in-app purchase (`com.pocketpickle.app.pro`, a non-consumable) unlocks six silly designs (Pickle Pal, Dill With It, Kitty, Purrkle, Toe Beans, and Pickle Party), the Wood, Carbon, and Thock sounds, the Gold, Carbon, Ice, and Sunset colors, and your own photo on the paddle. The designs are vector art in `src/Designs.tsx`. Locked sounds still play a preview. Purchases go through the App Store and are verified by [RevenueCat](https://www.revenuecat.com) (`react-native-purchases`): project "Pocket Pickle", entitlement `pocket_pickle_pro`, and the default offering's Lifetime package. Development builds use RevenueCat's Test Store, which simulates purchases, and also have an "unlock without paying" switch on the Pro page.
 
 Desktop preview (browsers need a tap on **Grab the paddle** first; there's no motion sensor, so the keyboard stands in: Space pops, Shift+Space hits hard, E catches the edge):
 
@@ -38,7 +38,7 @@ After copying this directory elsewhere, run `npm ci` to restore its locked depen
 - **Audio:** one mixer (`src/mixer.ts`) plays everything. In a local development build it uses `react-native-audio-api` for the lowest delay; Expo Go falls back to expo-audio automatically; the browser uses Web Audio.
 - With the system Reduce Motion setting on, the face doesn't shake or flash.
 
-No account, microphone, camera, backend, or analytics. Only the settings above and your paddle photo are saved, on the phone. The photo is copied into the app's private storage; the app never reads the rest of your library. Solo play works offline.
+No account, microphone, camera, or analytics. The only outside service is RevenueCat, used only for the Pro purchase: it sees an anonymous customer ID and the purchase history. Your settings and paddle photo stay on the phone. The photo is copied into the app's private storage; the app never reads the rest of your library. Solo play works offline.
 
 ## Checks
 
@@ -63,6 +63,6 @@ In the iOS Simulator (no motion sensor), development builds swing when you tap t
 
 Before publishing:
 
-- The bundle ID and Android package are `com.pocketpickle.app` (app.json). If you change them, change `PRO_SKU` in `src/usePro.ts` to match.
-- Create the Pro product as a non-consumable in App Store Connect and Google Play Console with that ID and your price.
-- Test purchases with a sandbox account (or a StoreKit configuration file in Xcode) and rallies on real phones.
+- The bundle ID and Android package are `com.pocketpickle.app` (app.json), and the Pro product is `com.pocketpickle.app.pro` in App Store Connect ($2.99). They can't change once published.
+- For Android, add a Google Play app and the same product to the RevenueCat project, then add its `goog_` SDK key in `src/usePro.ts`.
+- Test purchases with a sandbox account and rallies on real phones.
