@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { FINISHES, PHOTO } from './PaddleArt';
+import Svg, { Rect } from 'react-native-svg';
+import { DESIGNS, FINISHES, PHOTO } from './PaddleArt';
+import { DesignArt } from './Designs';
 import type { Finish } from './PaddleArt';
 import { PACKS } from './sounds';
 import type { Pack } from './sounds';
@@ -59,6 +61,22 @@ export function Menu(props: MenuProps) {
 						{locked(PHOTO) && <Badge />}
 					</Pressable>}
 				</View>
+				<Text style={styles.label}>Designs</Text>
+				<View style={styles.swatches} accessibilityRole="radiogroup" accessibilityLabel="Paddle design">
+					{DESIGNS.map(option => <Pressable key={option.name}
+						onPress={() => locked(option) ? setPage('pro') : props.onFinish(option)} accessibilityRole="radio"
+						accessibilityLabel={locked(option) ? `${option.name}, Pro` : option.name} accessibilityState={{ selected: option.name === finish.name }}
+						style={[styles.swatch, option.name === finish.name && { borderColor: option.face }]}>
+						<View style={styles.designDot}>
+							{option.art && <Svg width="100%" height="100%" viewBox="-50 -50 100 100">
+								<Rect x={-50} y={-50} width={100} height={100} fill={option.face} />
+								<DesignArt art={option.art} />
+							</Svg>}
+						</View>
+						{locked(option) && <Badge />}
+					</Pressable>)}
+				</View>
+				{finish.art && <Text style={styles.hint}>{finish.name}</Text>}
 				{finish.name === PHOTO.name && <Pressable onPress={props.onPickPhoto} accessibilityRole="button" style={styles.link}>
 					<Text style={styles.linkText}>Choose a different photo</Text>
 				</Pressable>}
@@ -97,7 +115,7 @@ export function Menu(props: MenuProps) {
 
 				{!pro.owned && <Pressable onPress={() => setPage('pro')} accessibilityRole="button" style={styles.proCard}>
 					<Text style={styles.proTitle}>Pocket Pickle Pro{pro.price ? ` · ${pro.price}` : ''}</Text>
-					<Text style={styles.proCopy}>Wood, Carbon and Thock sounds, four more faces, and your own photo on the paddle.</Text>
+					<Text style={styles.proCopy}>Pickle and cat designs, Wood, Carbon and Thock sounds, four more colors, and your own photo on the paddle.</Text>
 				</Pressable>}
 
 				<Text style={styles.fine}>Hold on tight and give yourself room. Sounds are synthesized on-device from measurements of real pickleball contacts. Works offline; only your settings and paddle photo are saved, on this phone.</Text>
@@ -112,8 +130,9 @@ function ProPage({ pro, finish, onBack }: { pro: Pro; finish: Finish; onBack: ()
 	return <>
 		<Text accessibilityRole="header" style={styles.title}>Pocket Pickle Pro</Text>
 		{pro.owned ? <Text style={styles.body}>Pro is unlocked on this phone. Thanks for supporting Pocket Pickle!</Text> : <>
+			<Text style={styles.bullet}>• Six silly designs: Pickle Pal, Dill With It, Kitty, Purrkle, Toe Beans and Pickle Party</Text>
 			<Text style={styles.bullet}>• Three more paddle sounds: Wood, Carbon and Thock</Text>
-			<Text style={styles.bullet}>• Four more faces: Gold, Carbon, Ice and Sunset</Text>
+			<Text style={styles.bullet}>• Four more colors: Gold, Carbon, Ice and Sunset</Text>
 			<Text style={styles.bullet}>• Your own photo on the paddle face</Text>
 			<Text style={styles.body}>One-time purchase. No ads, no subscription.</Text>
 			{pro.available
@@ -157,6 +176,7 @@ const styles = StyleSheet.create({
 	swatches: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 	swatch: { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
 	swatchDot: { width: 30, height: 30, borderRadius: 15, borderWidth: 1, borderColor: '#ffffff26' },
+	designDot: { width: 38, height: 38, borderRadius: 19, overflow: 'hidden', borderWidth: 1, borderColor: '#ffffff26' },
 	photoDot: { backgroundColor: '#ffffff14', alignItems: 'center', justifyContent: 'center' },
 	photoGlyph: { color: INK, fontSize: 18, fontWeight: '800', marginTop: -2 },
 	badge: { position: 'absolute', bottom: -2, paddingHorizontal: 4, borderRadius: 6, backgroundColor: '#05080d' },

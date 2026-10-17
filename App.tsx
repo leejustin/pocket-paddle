@@ -5,7 +5,7 @@ import { usePaddleAudio } from './src/usePaddleAudio';
 import { useSwingSession } from './src/useSwingSession';
 import { useSettings } from './src/settings';
 import { FocusStyles } from './src/FocusStyles';
-import { FINISHES, GUARD, PHOTO, Ball, Face, Sheen } from './src/PaddleArt';
+import { DESIGNS, FINISHES, GUARD, PHOTO, Ball, Face, Sheen } from './src/PaddleArt';
 import { INK, Menu, SENSITIVITY } from './src/Menu';
 import { PACKS } from './src/sounds';
 import { usePro } from './src/usePro';
@@ -53,7 +53,7 @@ function PhonePaddle() {
 	// Pro choices stay saved but fall back to the free ones while Pro is locked.
 	const unlocked = <T extends { pro?: boolean }>(item: T | undefined) => item && (!item.pro || pro.owned) ? item : undefined;
 	const photo = settings.finish === PHOTO.name && pro.owned ? photoUri(settings.photo) : undefined;
-	const finish = photo ? PHOTO : unlocked(FINISHES.find(option => option.name === settings.finish)) ?? FINISHES[0];
+	const finish = photo ? PHOTO : unlocked([...FINISHES, ...DESIGNS].find(option => option.name === settings.finish)) ?? FINISHES[0];
 	const pack = unlocked(PACKS.find(option => option.id === settings.pack))?.id ?? 'classic';
 	const reduceMotion = useReduceMotion();
 	const appActive = useAppActive();

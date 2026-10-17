@@ -1,11 +1,13 @@
 import { memo } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, G, Line, LinearGradient, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import { DesignArt } from './Designs';
+import type { Art } from './Designs';
 
 export const GUARD = '#0d1016';
 export const BALL = '#e4f53b';
-/** `pro` faces come with Pocket Pickle Pro. */
-export type Finish = { name: string; face: string; deep: string; print: string; pro?: boolean };
+/** `pro` faces come with Pocket Pickle Pro. `art` prints a silly design over the face color. */
+export type Finish = { name: string; face: string; deep: string; print: string; pro?: boolean; art?: Art };
 export const FINISHES: Finish[] = [
 	{ name: 'Volt', face: '#c8f73a', deep: '#4f7a0c', print: '#1c2a05' },
 	{ name: 'Coral', face: '#ff6a55', deep: '#9a2318', print: '#3a0b06' },
@@ -15,6 +17,15 @@ export const FINISHES: Finish[] = [
 	{ name: 'Carbon', face: '#3a3f48', deep: '#0b0d11', print: '#e8edf3', pro: true },
 	{ name: 'Ice', face: '#bfeaff', deep: '#3b86b5', print: '#06263a', pro: true },
 	{ name: 'Sunset', face: '#ff9a3c', deep: '#b0245c', print: '#3a0717', pro: true },
+];
+/** Silly printed designs, all part of Pro. */
+export const DESIGNS: Finish[] = [
+	{ name: 'Pickle Pal', face: '#fff1b8', deep: '#e9b949', print: '#2f4a12', pro: true, art: 'pickle-pal' },
+	{ name: 'Dill With It', face: '#ff7eb6', deep: '#c2185b', print: '#2b0718', pro: true, art: 'dill-with-it' },
+	{ name: 'Kitty', face: '#c9b6ff', deep: '#7a5fd6', print: '#1d1240', pro: true, art: 'kitty' },
+	{ name: 'Purrkle', face: '#9fd8ff', deep: '#3a7bbf', print: '#0b2340', pro: true, art: 'purrkle' },
+	{ name: 'Toe Beans', face: '#fff3e6', deep: '#f2b8a2', print: '#4a1424', pro: true, art: 'toe-beans' },
+	{ name: 'Pickle Party', face: '#ffe066', deep: '#f59f00', print: '#3d2a00', pro: true, art: 'pickle-party' },
 ];
 /** Your own photo on the face. Its colors only tint the controls drawn on top. */
 export const PHOTO: Finish = { name: 'Photo', face: '#f6f8ef', deep: '#7d8794', print: '#0d1016', pro: true };
@@ -39,7 +50,7 @@ export const Face = memo(function Face({ width: w, height: h, finish, sweet, pho
 			{weave.map(offset => <Line key={offset} x1={0} y1={offset} x2={w} y2={offset - w * 0.35} />)}
 		</G>
 		<Rect width={w} height={h} fill="url(#spot)" />
-		{!photo && <>
+		{!photo && !finish.art && <>
 			{/* Printed graphics, like a real paddle's cosmetics */}
 			<Path d={`M 0 ${h * 0.74} L ${w} ${h * 0.62}`} stroke={finish.print} strokeOpacity="0.14" strokeWidth={w * 0.09} />
 			<Path d={`M 0 ${h * 0.81} L ${w} ${h * 0.69}`} stroke={finish.print} strokeOpacity="0.09" strokeWidth={w * 0.025} />
@@ -81,6 +92,7 @@ export const Face = memo(function Face({ width: w, height: h, finish, sweet, pho
 		<Handle w={w} h={h} guard={guard} faceBottom={faceBottom} neck={neck} />
 		<G clipPath="url(#faceClip)">
 			<Rect width={w} height={h} fill="url(#face)" />
+			{finish.art && <G transform={`translate(${sweet.x} ${sweet.y}) scale(${w / 100})`}><DesignArt art={finish.art} /></G>}
 			{marks}
 		</G>
 	</Svg>;
