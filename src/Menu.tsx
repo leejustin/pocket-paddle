@@ -23,7 +23,11 @@ type MenuProps = {
 	sensitivity: number; onSensitivity: (index: number) => void;
 	pro: Pro;
 	/** Missing where rally mode isn't available (Expo Go, the web). */
-	rally?: { playing: boolean; onFind: () => void; onLeave: () => void; buzz: boolean; onBuzz: (on: boolean) => void };
+	rally?: {
+		playing: boolean; onFind: () => void; onLeave: () => void; buzz: boolean; onBuzz: (on: boolean) => void;
+		/** Missing where doubles isn't available (Android). Hosting needs Pro; joining is free. */
+		doubles?: { onHost: () => void; onJoin: () => void };
+	};
 };
 
 export function Menu(props: MenuProps) {
@@ -103,13 +107,28 @@ export function Menu(props: MenuProps) {
 					<Text style={styles.label}>Rally with a friend</Text>
 					{props.rally.playing
 						? <Pressable onPress={() => { props.rally?.onLeave(); onClose(); }} accessibilityRole="button" style={styles.outline}>
-							<Text style={styles.outlineText}>Leave the rally</Text>
+							<Text style={styles.outlineText}>Leave the game</Text>
 						</Pressable>
 						: <>
 							<Text style={styles.body}>Two phones, one rally. Swing any time the ring shows; the bounce is the sweet spot.</Text>
 							<Pressable onPress={() => { props.rally?.onFind(); onClose(); }} accessibilityRole="button" style={styles.outline}>
 								<Text style={styles.outlineText}>Find a friend nearby</Text>
 							</Pressable>
+							{props.rally.doubles && <>
+								<Text style={styles.label}>Doubles</Text>
+								<Text style={styles.body}>Four phones, two teams. The host needs Pro; everyone else joins free.</Text>
+								<View style={styles.pair}>
+									<Pressable onPress={() => { if (!pro.owned) return setPage('pro'); props.rally?.doubles?.onHost(); onClose(); }}
+										accessibilityRole="button" accessibilityLabel={pro.owned ? 'Host doubles' : 'Host doubles, Pro'} style={[styles.outline, styles.half]}>
+										<Text style={styles.outlineText}>Host</Text>
+										{!pro.owned && <Text style={styles.inlineBadge}>PRO</Text>}
+									</Pressable>
+									<Pressable onPress={() => { props.rally?.doubles?.onJoin(); onClose(); }} accessibilityRole="button"
+										accessibilityLabel="Join doubles" style={[styles.outline, styles.half]}>
+										<Text style={styles.outlineText}>Join</Text>
+									</Pressable>
+								</View>
+							</>}
 						</>}
 					<Text style={styles.label}>Buzz when it’s time to swing</Text>
 					<Segments accent={finish} value={props.rally.buzz ? 'on' : 'off'} onChange={value => props.rally?.onBuzz(value === 'on')}
@@ -118,7 +137,7 @@ export function Menu(props: MenuProps) {
 
 				{!pro.owned && <Pressable onPress={() => setPage('pro')} accessibilityRole="button" style={styles.proCard}>
 					<Text style={styles.proTitle}>Pocket Pickle Pro{pro.price ? ` · ${pro.price}` : ''}</Text>
-					<Text style={styles.proCopy}>Pickle and cat designs, Wood, Carbon and Thock sounds, four more colors, and your own photo on the paddle.</Text>
+					<Text style={styles.proCopy}>Six silly designs, three more sounds, four more colors, your photo on the paddle, and hosting doubles. One-time unlock.</Text>
 				</Pressable>}
 
 				<Text style={styles.fine}>Hold on tight and give yourself room. Sounds are synthesized on-device from measurements of real pickleball contacts. Works offline. Your settings and paddle photo stay on this phone; Pro purchases are checked with the App Store through RevenueCat.</Text>
@@ -132,18 +151,21 @@ export function Menu(props: MenuProps) {
 function ProPage({ pro, finish, onBack }: { pro: Pro; finish: Finish; onBack: () => void }) {
 	return <>
 		<Text accessibilityRole="header" style={styles.title}>Pocket Pickle Pro</Text>
-		{pro.owned ? <Text style={styles.body}>Pro is unlocked on this phone. Thanks for supporting Pocket Pickle!</Text> : <>
+		{pro.owned ? <Text style={styles.body}>Pro is unlocked: every design, sound and color, your photo on the paddle, and hosting doubles. Thanks for supporting Pocket Pickle!</Text> : <>
+			<Text style={styles.body}>Pro adds:</Text>
 			<Text style={styles.bullet}>• Six silly designs: Pickle Pal, Dill With It, Kitty, Purrkle, Toe Beans and Pickle Party</Text>
 			<Text style={styles.bullet}>• Three more paddle sounds: Wood, Carbon and Thock</Text>
 			<Text style={styles.bullet}>• Four more colors: Gold, Carbon, Ice and Sunset</Text>
 			<Text style={styles.bullet}>• Your own photo on the paddle face</Text>
+			<Text style={styles.bullet}>• Host doubles: four phones, two teams. Only the host needs Pro; the other three play free</Text>
+			<Text style={styles.body}>Always free: swinging, four colors, the Classic sound, one-on-one rallies, and joining a friend’s doubles game.</Text>
 			<Text style={styles.body}>One-time purchase. No ads, no subscription.</Text>
 			{pro.available
 				? <Pressable onPress={pro.buy} disabled={pro.busy} accessibilityRole="button" accessibilityState={{ busy: pro.busy }}
 					style={[styles.done, { backgroundColor: finish.face, opacity: pro.busy ? 0.6 : 1 }]}>
 					<Text style={[styles.doneText, { color: finish.print }]}>{pro.busy ? 'Talking to the store…' : pro.price ? `Unlock for ${pro.price}` : 'Unlock Pro'}</Text>
 				</Pressable>
-				: <Text style={styles.hint}>Pro is sold in the App Store and Google Play versions of Pocket Pickle.</Text>}
+				: <Text style={styles.hint}>Pro is available in the iPhone app.</Text>}
 			{pro.available && <Pressable onPress={pro.restore} disabled={pro.busy} accessibilityRole="button" style={styles.link}>
 				<Text style={styles.linkText}>Restore purchase</Text>
 			</Pressable>}
@@ -196,6 +218,9 @@ const styles = StyleSheet.create({
 	link: { marginTop: 6, minHeight: 44, justifyContent: 'center' },
 	linkText: { color: INK, fontSize: 14, fontWeight: '800', textDecorationLine: 'underline' },
 	outline: { marginTop: 10, minHeight: 48, borderRadius: 24, borderWidth: 1.5, borderColor: '#ffffff40', alignItems: 'center', justifyContent: 'center' },
+	pair: { flexDirection: 'row', gap: 10 },
+	half: { flex: 1, flexDirection: 'row', gap: 8 },
+	inlineBadge: { color: INK, fontSize: 10, fontWeight: '900', letterSpacing: 1, paddingHorizontal: 5, paddingVertical: 1, borderRadius: 6, backgroundColor: '#05080d', overflow: 'hidden' },
 	outlineText: { color: INK, fontWeight: '900', fontSize: 16 },
 	proCard: { marginTop: 22, padding: 16, borderRadius: 18, backgroundColor: '#ffffff0d', borderWidth: 1, borderColor: '#ffffff1f' },
 	proTitle: { color: INK, fontSize: 16, fontWeight: '900' },

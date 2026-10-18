@@ -18,6 +18,8 @@ The ••• button has the paddle face, sound, and swing sensitivity (plus "pu
 
 Off unless someone turns it on: ••• → **Find a friend nearby** on both phones, then tap the other phone's name. Whoever taps serves. Swing to hit the ball to the other phone; it grows on their screen and they swing back any time in a generous 2.5-second window. Their phone buzzes as the ball comes in: a soft tap, a double tap when the window opens, a quickening pulse, and a thump on the bounce, the sweet spot (turn the buzz off in •••). Swinging when there's no ball makes no sound, like a real paddle. Catching the edge sends the ball out. The point winner serves next.
 
+**Doubles** (iOS, hosting needs Pro): four phones, two teams. The host taps ••• → **Host** and three friends tap ••• → **Join**, then pick the host's game. The host picks a partner and starts. Either player on a team can return the ball; the first swing in the window takes it. The team that wins a point serves next, and its two players take turns serving. The host phone is the referee: friends send it their swings and it decides every shot and point, so the four phones never disagree. If anyone leaves, the game ends for everyone.
+
 The phones talk directly: same Wi-Fi on both platforms, or no Wi-Fi at all between two iPhones (Apple's peer-to-peer Wi-Fi). Nothing goes through a server. Rally mode needs a native build; it's hidden in Expo Go and the browser.
 
 ### Pocket Pickle Pro
@@ -33,7 +35,7 @@ After copying this directory elsewhere, run `npm ci` to restore its locked depen
 ## How it works
 
 - **Sounds** are synthesized by `scripts/generate_sounds.py`, tuned to measurements of real pickleball contacts: a ~1.1 kHz "pock," a bright click, and a ~15 ms decay. There are soft, medium, and hard pops (three variants each, never the same twice in a row), two edge clacks, three Pro paddle packs, and the court bounce and dead ball used in rallies. See [sound-source/README.md](sound-source/README.md).
-- **Rally** rules live in `src/rally.ts` (pure, tested). Each ball is judged only by the phone it's flying toward, so the phones never disagree about a point; they measure network delay and take it off the ball's flight. The connection is a small local Expo module, `modules/pickle-link` (Network.framework on iOS, Network Service Discovery and sockets on Android).
+- **Rally** rules live in `src/rally.ts` and doubles rules in `src/doubles.ts` (both pure, tested). Each ball is judged only by the phone it's flying toward, so the phones never disagree about a point; they measure network delay and take it off the ball's flight. The connection is a small local Expo module, `modules/pickle-link` (Network.framework on iOS, Network Service Discovery and sockets on Android).
 - **Swings** are detected mostly from the gyro (`src/motion.ts`), so a wrist flick counts. The pop fires right at peak swing speed, the moment a real paddle would meet the ball. Handling, slow turns, glitchy frames, and follow-through don't pop.
 - **Audio:** one mixer (`src/mixer.ts`) plays everything. In a local development build it uses `react-native-audio-api` for the lowest delay; Expo Go falls back to expo-audio automatically; the browser uses Web Audio.
 - With the system Reduce Motion setting on, the face doesn't shake or flash.

@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
-import * as Haptics from 'expo-haptics';
 import { link } from './link';
 import type { Peer } from './link';
 import { PROTOCOL, canHit, newRally, parseMessage, receive, swing, tick } from './rally';
-import type { Buzz, Effect, Message, Rally } from './rally';
+import type { Effect, Message, Rally } from './rally';
+import { buzz, pointFeel } from './feel';
 import type { Shot } from './motion';
 import type { Cue } from './sounds';
 
@@ -16,17 +16,6 @@ export type RallyView =
 const TICK = 16;
 const PING = 2000;
 
-/** Feel the ball coming without looking: a soft tap, a double tap when you can swing, a quickening pulse, then a thump on the bounce. */
-function buzz(name: Buzz) {
-	const { ImpactFeedbackStyle: Style } = Haptics;
-	const tap = (style: Haptics.ImpactFeedbackStyle) => Haptics.impactAsync(style).catch(() => undefined);
-	switch (name) {
-		case 'coming': return tap(Style.Soft);
-		case 'open': tap(Style.Medium); setTimeout(() => tap(Style.Medium), 90); return;
-		case 'beat': return tap(Style.Light);
-		case 'now': return tap(Style.Heavy);
-	}
-}
 
 /**
  * Opt-in two-phone rally. `cue` plays the bounce and dead-ball sounds; `haptics` turns the swing buzzes on.
@@ -56,10 +45,7 @@ export function useRally(cue: (name: Cue) => void, haptics: boolean) {
 			if (effect.kind === 'send') send(effect.message);
 			else if (effect.kind === 'sound') cueRef.current(effect.name);
 			else if (effect.kind === 'buzz') { if (hapticsRef.current) buzz(effect.name); }
-			else {
-				Haptics.notificationAsync(effect.won ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning)
-					.catch(() => undefined);
-			}
+			else pointFeel(effect.won);
 		}
 		if (changed) show();
 	}, [send, show]);
@@ -84,6 +70,8 @@ export function useRally(cue: (name: Cue) => void, haptics: boolean) {
 				} : current);
 			}),
 			link.addListener('onConnected', ({ initiator }) => {
+				// Doubles uses the same link; only a one-on-one lobby turns a connection into a rally.
+				if (viewRef.current.kind !== 'lobby') return;
 				const name = viewRef.current.kind === 'lobby' ? viewRef.current.name : 'Paddle';
 				friend.current = 'Your friend';
 				// Whoever tapped to join serves first.

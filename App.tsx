@@ -10,8 +10,11 @@ import { INK, Menu, SENSITIVITY } from './src/Menu';
 import { PACKS } from './src/sounds';
 import { usePro } from './src/usePro';
 import { useRally } from './src/useRally';
-import { RallyHud, RallyLobby } from './src/RallyScreens';
+import { useDoubles } from './src/useDoubles';
+import { seatScore, seatStatus } from './src/doubles';
+import { DoublesLobby, RallyHud, RallyLobby, ballOf, rallyScore, rallyStatus } from './src/RallyScreens';
 import { photoUri, pickPaddlePhoto } from './src/photo';
+import type { Shot } from './src/motion';
 
 const native = Platform.OS !== 'web';
 
@@ -64,8 +67,14 @@ function PhonePaddle() {
 	const shake = useRef(new Animated.Value(0)).current;
 	const audio = usePaddleAudio(pack);
 	const rally = useRally(audio.cue, settings.swingBuzz);
+	const doubles = useDoubles(audio.cue, settings.swingBuzz);
 	const onMotion = useCallback((value: number, side: number) => { swing.setValue(value); tilt.setValue(side); }, [swing, tilt]);
-	const session = useSwingSession({ ...audio, onMotion, accept: rally.accept });
+	const accept = useCallback((shot: Shot) => doubles.view.kind === 'playing' ? doubles.accept(shot) : rally.accept(shot),
+		[doubles.view.kind, doubles.accept, rally.accept]);
+	const session = useSwingSession({ ...audio, onMotion, accept });
+	const leaveGame = useCallback(() => { rally.leave(); doubles.leave(); }, [rally.leave, doubles.leave]);
+	const notice = rally.notice ?? doubles.notice;
+	const playing = rally.view.kind === 'playing' || doubles.view.kind === 'playing';
 	const sweet = { x: width / 2, y: height * 0.4, r: Math.min(width, height) * 0.17 };
 
 	useEffect(() => { session.setSensitivity(SENSITIVITY[settings.sensitivity]?.value ?? 0.5); }, [settings.sensitivity, session.setSensitivity]);
@@ -75,7 +84,7 @@ function PhonePaddle() {
 	useEffect(() => { if (native && appActive && audio.ready) void session.start(); }, [appActive, audio.ready, session.start]);
 	const openMenu = useCallback(() => setMenuOpen(true), []);
 	const closeMenu = useCallback(() => setMenuOpen(false), []);
-	const putDown = useCallback(() => { setMenuOpen(false); rally.leave(); session.stop(); }, [rally.leave, session.stop]);
+	const putDown = useCallback(() => { setMenuOpen(false); leaveGame(); session.stop(); }, [leaveGame, session.stop]);
 	const choosePhoto = useCallback(() => {
 		// iOS can't show the photo picker over the menu, so let the menu finish closing first.
 		setMenuOpen(false);
@@ -84,12 +93,12 @@ function PhonePaddle() {
 				.catch(cause => console.warn('Could not use that photo', cause));
 		}, 450);
 	}, [settings.photo, update]);
-	// Rally notices (like a friend leaving) fade on their own.
+	// Rally and doubles notices (like a friend leaving) fade on their own.
 	useEffect(() => {
-		if (!rally.notice) return;
-		const timer = setTimeout(rally.clearNotice, 4000);
+		if (!notice) return;
+		const timer = setTimeout(() => { rally.clearNotice(); doubles.clearNotice(); }, 4000);
 		return () => clearTimeout(timer);
-	}, [rally.notice, rally.clearNotice]);
+	}, [notice, rally.clearNotice, doubles.clearNotice]);
 
 	useEffect(() => {
 		const shot = session.shot;
@@ -150,9 +159,12 @@ function PhonePaddle() {
 		{/* The iOS Simulator has no motion sensor, so development builds swing on a tap. */}
 		{__DEV__ && native && session.active && <Pressable onPress={() => session.simulate(760)} style={StyleSheet.absoluteFill} accessibilityLabel="Swing (development builds only)" />}
 
-		{rally.view.kind === 'playing' && <RallyHud view={rally.view} sweet={sweet} top={insets.top + 14} />}
-		{rally.notice && rally.view.kind !== 'playing' && <View pointerEvents="none" style={[styles.toast, { top: insets.top + 14 }]}>
-			<Text style={styles.toastText}>{rally.notice}</Text>
+		{rally.view.kind === 'playing' && <RallyHud phase={ballOf(rally.view.rally.phase)} status={rallyStatus(rally.view)} score={rallyScore(rally.view)}
+			swingNow={rally.view.swingNow} sweet={sweet} top={insets.top + 14} />}
+		{doubles.view.kind === 'playing' && <RallyHud phase={ballOf(doubles.view.seat.phase)} status={seatStatus(doubles.view.seat, doubles.view.swingNow)}
+			score={seatScore(doubles.view.seat)} swingNow={doubles.view.swingNow} sweet={sweet} top={insets.top + 14} />}
+		{notice && !playing && <View pointerEvents="none" style={[styles.toast, { top: insets.top + 14 }]}>
+			<Text style={styles.toastText}>{notice}</Text>
 		</View>}
 
 		{session.active && <Pressable onPress={openMenu} accessibilityRole="button" accessibilityLabel="Paddle settings" hitSlop={10}
@@ -178,9 +190,12 @@ function PhonePaddle() {
 			pack={pack} onPack={choice => update({ pack: choice })} onPreview={audio.preview}
 			sensitivity={settings.sensitivity} onSensitivity={sensitivity => update({ sensitivity })}
 			pro={pro}
-			rally={rally.available ? { playing: rally.view.kind === 'playing', onFind: rally.find, onLeave: rally.leave,
-				buzz: settings.swingBuzz, onBuzz: swingBuzz => update({ swingBuzz }) } : undefined} />
+			rally={rally.available ? { playing, onFind: rally.find, onLeave: leaveGame,
+				buzz: settings.swingBuzz, onBuzz: swingBuzz => update({ swingBuzz }),
+				doubles: doubles.available ? { onHost: doubles.host, onJoin: doubles.join } : undefined } : undefined} />
 		{rally.view.kind === 'lobby' && <RallyLobby view={rally.view} finish={finish} onJoin={rally.join} onCancel={rally.leave} />}
+		{(doubles.view.kind === 'hosting' || doubles.view.kind === 'joining') && <DoublesLobby view={doubles.view} finish={finish}
+			onChoose={doubles.choose} onPartner={doubles.partner} onStart={doubles.start} onCancel={doubles.leave} />}
 	</View>;
 }
 

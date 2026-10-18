@@ -18,7 +18,7 @@ export const POINT_PAUSE = 1800;
 /** Gap (ms) to the first heartbeat buzz after the window opens; each one comes sooner, down to MIN_BEAT. */
 export const FIRST_BEAT = 380;
 const MIN_BEAT = 110;
-const MAX_LATENCY = 150;
+export const MAX_LATENCY = 150;
 
 export type EndReason = 'miss' | 'out';
 export type Message =
@@ -29,10 +29,12 @@ export type Message =
 	| { t: 'ping'; at: number }
 	| { t: 'pong'; at: number };
 
+/** A ball flying at this phone, with the progress of its swing cues. */
+export type Incoming = { kind: 'incoming'; launched: number; arrival: number; bounced: boolean; opened: boolean; beatAt: number; gap: number };
 export type Phase =
 	| { kind: 'serve'; mine: boolean }
 	| { kind: 'away'; launched: number; flight: number }
-	| { kind: 'incoming'; launched: number; arrival: number; bounced: boolean; opened: boolean; beatAt: number; gap: number }
+	| Incoming
 	| { kind: 'point'; won: boolean; why: EndReason; until: number };
 
 /** `count` is the number of shots in the current rally; `latency` is the one-way delay estimate (ms). */
@@ -48,6 +50,27 @@ export type Effect =
 	| { kind: 'sound'; name: 'bounce' | 'dead-ball' }
 	| { kind: 'point'; won: boolean };
 type Step = { rally: Rally; effects: Effect[] };
+export type Cue = Extract<Effect, { kind: 'buzz' | 'sound' }>;
+
+/** A fresh incoming ball that lands `flight` ms after `now`. */
+export function incoming(now: number, arrival: number): Incoming {
+	return { kind: 'incoming', launched: now, arrival, bounced: false, opened: false, beatAt: 0, gap: FIRST_BEAT };
+}
+
+/** The swing cues due for an incoming ball at `now`: the window opening, the quickening beat, and the bounce. */
+export function cues<P extends Incoming>(phase: P, now: number): { phase: P; effects: Cue[] } | undefined {
+	if (!phase.opened && now >= phase.arrival - EARLY) {
+		return { phase: { ...phase, opened: true, beatAt: now + phase.gap }, effects: [{ kind: 'buzz', name: 'open' }] };
+	}
+	if (!phase.bounced && now >= phase.arrival - BOUNCE_LEAD) {
+		return { phase: { ...phase, bounced: true }, effects: [{ kind: 'sound', name: 'bounce' }, { kind: 'buzz', name: 'now' }] };
+	}
+	if (phase.opened && !phase.bounced && now >= phase.beatAt) {
+		const gap = Math.max(MIN_BEAT, Math.round(phase.gap * 0.72));
+		return { phase: { ...phase, beatAt: now + gap, gap }, effects: [{ kind: 'buzz', name: 'beat' }] };
+	}
+	return undefined;
+}
 
 export function newRally(serveFirst: boolean): Rally {
 	return { phase: { kind: 'serve', mine: serveFirst }, count: 0, me: 0, them: 0, best: 0, latency: 0 };
@@ -60,8 +83,12 @@ export function flightFor(power: number): number {
 
 /** True while a swing would meet the incoming ball. */
 export function canHit(rally: Rally, time: number): boolean {
-	const { phase } = rally;
-	return phase.kind === 'incoming' && time >= phase.arrival - EARLY && time <= phase.arrival + LATE;
+	return rally.phase.kind === 'incoming' && inWindow(rally.phase.arrival, time);
+}
+
+/** True when a swing at `time` meets a ball arriving at `arrival`. */
+export function inWindow(arrival: number, time: number): boolean {
+	return time >= arrival - EARLY && time <= arrival + LATE;
 }
 
 /**
@@ -87,8 +114,7 @@ export function receive(rally: Rally, message: Message, now: number): Step {
 	switch (message.t) {
 		case 'hit': {
 			const flight = clamp(message.flight, 300, 5000);
-			const phase: Phase = { kind: 'incoming', launched: now, arrival: now + flight - rally.latency, bounced: false, opened: false, beatAt: 0, gap: FIRST_BEAT };
-			return { rally: { ...rally, count: message.n, phase }, effects: [{ kind: 'buzz', name: 'coming' }] };
+			return { rally: { ...rally, count: message.n, phase: incoming(now, now + flight - rally.latency) }, effects: [{ kind: 'buzz', name: 'coming' }] };
 		}
 		case 'end': {
 			const best = Math.max(rally.best, rally.count);
@@ -117,16 +143,8 @@ export function tick(rally: Rally, now: number): Step {
 			const lost = lose(rally, 'miss', now);
 			return { rally: lost.rally, effects: [{ kind: 'sound', name: 'dead-ball' }, ...lost.effects] };
 		}
-		if (!phase.opened && now >= phase.arrival - EARLY) {
-			return { rally: { ...rally, phase: { ...phase, opened: true, beatAt: now + phase.gap } }, effects: [{ kind: 'buzz', name: 'open' }] };
-		}
-		if (!phase.bounced && now >= phase.arrival - BOUNCE_LEAD) {
-			return { rally: { ...rally, phase: { ...phase, bounced: true } }, effects: [{ kind: 'sound', name: 'bounce' }, { kind: 'buzz', name: 'now' }] };
-		}
-		if (phase.opened && !phase.bounced && now >= phase.beatAt) {
-			const gap = Math.max(MIN_BEAT, Math.round(phase.gap * 0.72));
-			return { rally: { ...rally, phase: { ...phase, beatAt: now + gap, gap } }, effects: [{ kind: 'buzz', name: 'beat' }] };
-		}
+		const due = cues(phase, now);
+		if (due) return { rally: { ...rally, phase: due.phase }, effects: due.effects };
 	}
 	if (phase.kind === 'point' && now >= phase.until) {
 		// The winner of the point serves next.
@@ -158,6 +176,6 @@ export function parseMessage(text: string): Message | undefined {
 	}
 }
 
-function clamp(value: number, min: number, max: number) {
+export function clamp(value: number, min: number, max: number) {
 	return Number.isFinite(value) ? Math.max(min, Math.min(max, value)) : min;
 }
